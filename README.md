@@ -1,23 +1,29 @@
 # People Analytics API
 
-API GraphQL para gerenciamento de pessoas e competências.
+API para análise de dados de pessoas e recursos humanos, fornecendo insights sobre performance, desenvolvimento e engajamento dos colaboradores.
 
-## Tecnologias
+## Tecnologias Utilizadas
 
 - NestJS
-- GraphQL
 - Prisma
 - PostgreSQL
+- GraphQL
+- Swagger/OpenAPI
 - TypeScript
 
-## Requisitos
+## Pré-requisitos
 
-- Node.js 18+
-- PostgreSQL 14+
+- Node.js (v18 ou superior)
+- PostgreSQL
+- npm ou yarn
 
 ## Instalação
 
-1. Clone o repositório
+1. Clone o repositório:
+```bash
+git clone [URL_DO_REPOSITÓRIO]
+```
+
 2. Instale as dependências:
 ```bash
 npm install
@@ -27,118 +33,81 @@ npm install
 ```bash
 cp .env.example .env
 ```
+Edite o arquivo `.env` com suas configurações.
 
 4. Execute as migrações do banco de dados:
 ```bash
 npx prisma migrate dev
 ```
 
-5. Inicie o servidor de desenvolvimento:
+## Executando a Aplicação
+
+### Desenvolvimento
 ```bash
 npm run start:dev
+```
+
+### Produção
+```bash
+npm run build
+npm run start:prod
+```
+
+## Documentação da API
+
+### Swagger UI
+A documentação interativa da API REST está disponível em:
+```
+http://localhost:3000/api
+```
+
+### GraphQL Playground
+O playground do GraphQL está disponível em:
+```
+http://localhost:3000/graphql
 ```
 
 ## Estrutura do Projeto
 
 ```
 src/
-├── application/          # Camada de aplicação
-│   └── graphql/         # Configuração do GraphQL
-│       ├── inputs/      # Inputs do GraphQL
-│       ├── modules/     # Módulos do GraphQL
-│       ├── resolvers/   # Resolvers do GraphQL
-│       └── types/       # Tipos do GraphQL
-├── core/                # Camada de domínio
-│   └── domain/         # Entidades e regras de negócio
-│       └── services/   # Serviços de domínio
-└── infrastructure/      # Camada de infraestrutura
-    └── database/       # Configuração do banco de dados
+├── application/          # Camada de aplicação (controllers, resolvers, DTOs)
+├── core/                 # Camada de domínio (entities, services)
+├── infrastructure/       # Camada de infraestrutura (database, external services)
+└── main.ts              # Ponto de entrada da aplicação
 ```
 
-## Funcionalidades
+## Testes
 
-- Gerenciamento de funcionários
-- Gerenciamento de posições
-- Gerenciamento de departamentos
-- Gerenciamento de habilidades
-- Avaliação de competências
-- Recomendações de desenvolvimento
-- Histórico de jornada do funcionário
+```bash
+# Testes unitários
+npm run test
 
-## API GraphQL
+# Testes e2e
+npm run test:e2e
 
-A API GraphQL está disponível em `http://localhost:3000/graphql`.
-
-### Exemplos de Queries
-
-```graphql
-# Buscar todos os funcionários
-query {
-  employees {
-    id
-    name
-    email
-    position {
-      name
-    }
-    department {
-      name
-    }
-  }
-}
-
-# Buscar funcionário por ID
-query {
-  employee(id: "1") {
-    id
-    name
-    email
-    position {
-      name
-    }
-    department {
-      name
-    }
-    skills {
-      name
-      level
-    }
-  }
-}
+# Cobertura de testes
+npm run test:cov
 ```
 
-### Exemplos de Mutations
+## Linting e Formatação
 
-```graphql
-# Criar funcionário
-mutation {
-  createEmployee(createEmployeeInput: {
-    name: "John Doe"
-    email: "john@example.com"
-    positionId: "1"
-    departmentId: "1"
-  }) {
-    id
-    name
-    email
-  }
-}
+```bash
+# Linting
+npm run lint
 
-# Atualizar funcionário
-mutation {
-  updateEmployee(
-    id: "1"
-    updateEmployeeInput: {
-      name: "John Doe Updated"
-    }
-  ) {
-    id
-    name
-    email
-  }
-}
+# Formatação
+npm run format
 ```
+
+## Contribuição
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
+4. Faça push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
 
 ## Licença
 
-Este projeto está licenciado sob a licença MIT.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
