@@ -1,0 +1,26 @@
+export enum UserRole {
+  // Roles Administrativas
+  SUPER_ADMIN = 'SUPER_ADMIN',
+  ADMIN = 'ADMIN',
+
+  // Roles de RH
+  HR_DIRECTOR = 'HR_DIRECTOR',
+  HR_MANAGER = 'HR_MANAGER',
+  HR_ANALYST = 'HR_ANALYST',
+
+  // Roles de Gestão
+  EXECUTIVE = 'EXECUTIVE',
+  DEPARTMENT_MANAGER = 'DEPARTMENT_MANAGER',
+  TEAM_LEADER = 'TEAM_LEADER',
+  MANAGER = 'MANAGER',
+
+  // Roles de Colaboradores
+  SENIOR_EMPLOYEE = 'SENIOR_EMPLOYEE',
+  EMPLOYEE = 'EMPLOYEE',
+  INTERN = 'INTERN',
+
+  // Roles Especiais
+  MENTOR = 'MENTOR',
+  TRAINER = 'TRAINER',
+  ANALYST = 'ANALYST',
+}

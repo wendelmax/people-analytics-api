@@ -1,32 +1,37 @@
 import { NestFactory } from '@nestjs/core';
+import { AppModule } from '@app.module';
+import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Configuração detalhada do Swagger
+  // Configurar CORS
+  app.enableCors();
+
+  // Configurar validação global
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
+
+  // Configurar Swagger
   const config = new DocumentBuilder()
     .setTitle('People Analytics API')
-    .setDescription('API para gerenciamento e análise de dados de colaboradores, incluindo habilidades, desenvolvimento, feedback, notificações, entre outros.')
-    .setContact('Jackson Sá', null, 'jacksonwendel@gmail.com')
+    .setDescription('API para análise de pessoas e gestão de talentos')
     .setVersion('1.0')
-    .setExternalDoc('Open Docs', '/swagger/json')
-    .addTag('employees', 'Gerenciamento de funcionários e dados pessoais')
-    .addTag('skills', 'Inventário e avaliação de habilidades dos funcionários')
-    .addTag('organizational-structure', 'Gerenciamento de departamentos e cargos')
-    .addTag('development', 'Gerenciamento de itens e progresso de desenvolvimento dos funcionários')
-    .addTag('feedback', 'Coleta e análise de feedback dos funcionários')
-    .addTag('notifications', 'Notificações enviadas para os funcionários')
-    .addTag('recommendations', 'Recomendações de carreira e habilidades baseadas em IA')
-    .addTag('chatbot-interactions', 'Interações dos funcionários com o chatbot de suporte')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('swagger', app, document, {
-    jsonDocumentUrl: 'swagger/json',
-  });
+  SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  // Iniciar servidor
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Aplicação rodando na porta ${port}`);
 }
+
 bootstrap();

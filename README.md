@@ -1,161 +1,113 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# People Analytics API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API para análise de dados de pessoas e recursos humanos, fornecendo insights sobre performance, desenvolvimento e engajamento dos colaboradores.
 
-  <p align="center">A comprehensive People Analytics System built with NestJS for managing employee experiences, career progression, and skills development.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
+## Tecnologias Utilizadas
 
-## Description
+- NestJS
+- Prisma
+- PostgreSQL
+- GraphQL
+- Swagger/OpenAPI
+- TypeScript
 
-The **People Analytics System** is a NestJS-based application that helps organizations track employee skills, manage career pathways, and enhance the employee experience through comprehensive insights and AI-driven recommendations. The system leverages PostgreSQL and Prisma ORM to support efficient and scalable data management.
+## Pré-requisitos
 
----
+- Node.js (v18 ou superior)
+- PostgreSQL
+- npm ou yarn
 
-## Features
+## Instalação
 
-- **Employee Management**: Store employee details, track roles, departments, and development progress.
-- **Career Pathways & Skills Mapping**: Define career pathways, assess skills, and set goals for development.
-- **Employee Experience Journeys**: Manage and track employee experiences through journey maps and touchpoints.
-- **AI-Powered Recommendations**: Suggest skills development, career positions, and development items.
-- **Notifications**: Notify employees of updates, recommendations, and career progression milestones.
+1. Clone o repositório:
+```bash
+git clone [URL_DO_REPOSITÓRIO]
+```
 
-## Project setup
+2. Instale as dependências:
+```bash
+npm install
+```
 
-1. **Clone the repository**:
+3. Configure as variáveis de ambiente:
+```bash
+cp .env.example .env
+```
+Edite o arquivo `.env` com suas configurações.
 
-   ```bash
-   git clone https://github.com/your-repo/people-analytics.git
-   cd people-analytics
-   ```
+4. Execute as migrações do banco de dados:
+```bash
+npx prisma migrate dev
+```
 
-2. **Install dependencies**:
+## Executando a Aplicação
 
-   ```bash
-   npm install
-   ```
+### Desenvolvimento
+```bash
+npm run start:dev
+```
 
-3. **Set up Prisma**:
+### Produção
+```bash
+npm run build
+npm run start:prod
+```
 
-   - Generate Prisma client:
-     ```bash
-     npx prisma generate
-     ```
+## Documentação da API
 
-4. **Database Migration**:
+### Swagger UI
+A documentação interativa da API REST está disponível em:
+```
+http://localhost:3000/api
+```
 
-   - Run migrations to set up the database schema:
-     ```bash
-     npx prisma migrate dev --name init
-     ```
+### GraphQL Playground
+O playground do GraphQL está disponível em:
+```
+http://localhost:3000/graphql
+```
 
-5. **Start the Server**:
-   ```bash
-   npm run start:dev
-   ```
+## Estrutura do Projeto
 
----
+```
+src/
+├── application/          # Camada de aplicação (controllers, resolvers, DTOs)
+├── core/                 # Camada de domínio (entities, services)
+├── infrastructure/       # Camada de infraestrutura (database, external services)
+└── main.ts              # Ponto de entrada da aplicação
+```
 
-## Compile and Run the Project
+## Testes
 
 ```bash
-# development
-$ npm run start
+# Testes unitários
+npm run test
 
-# watch mode
-$ npm run start:dev
+# Testes e2e
+npm run test:e2e
 
-# production mode
-$ npm run start:prod
+# Cobertura de testes
+npm run test:cov
 ```
 
----
-
-## Run Tests
+## Linting e Formatação
 
 ```bash
-# unit tests
-$ npm run test
+# Linting
+npm run lint
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Formatação
+npm run format
 ```
 
----
+## Contribuição
 
-## Modules
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
+3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
+4. Faça push para a branch (`git push origin feature/nova-feature`)
+5. Abra um Pull Request
 
-This system includes various modules, each encapsulating a specific domain within People Analytics. Key modules include:
+## Licença
 
-1. **FuncionariosModule**: Employee management, including authentication and role-based access.
-2. **DepartamentosModule**: Department structure, team assignments, and hierarchy.
-3. **CargosModule**: Role management, including levels, requirements, and promotions.
-4. **SkillsInventoryModule**: Track and categorize skills (hard/soft).
-5. **SkillsAssessmentsModule**: Assess employee proficiency and skill levels.
-6. **CareerPositionsModule**: Define and track career aspirations and goals.
-7. **EmployeeExperienceJourneyModule**: Map out employee experience journeys and touchpoints.
-8. **EmployeeFeedbackModule**: Collect feedback on employee experience touchpoints.
-9. **NotificationsModule**: Send updates and alerts to employees.
-10. **DevelopmentItemsModule**: Track training programs and certifications.
-11. **AI-Powered Recommendations**: Suggest career pathways, skills development, and other insights.
-
----
-
-## Environment Variables
-
-Create a `.env` file in the root directory and add the following environment variables:
-
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/people_analytics_db"
-PORT=3000
-```
-
----
-
-## Deployment
-
-To deploy the NestJS application, refer to the official [deployment documentation](https://docs.nestjs.com/deployment) for setup and configuration.
-
-For quick cloud-based deployment on AWS, consider using **NestJS Mau**:
-
-```bash
-$ npm install -g mau
-$ mau deploy
-```
-
----
-
-## Resources
-
-Here are a few resources to support you while working with NestJS:
-
-- [NestJS Documentation](https://docs.nestjs.com)
-- [NestJS Discord Channel](https://discord.gg/G7Qnnhy)
-- [NestJS Courses](https://courses.nestjs.com/)
-- [NestJS Devtools](https://devtools.nestjs.com) for live app visualization.
-- [Jobs Board](https://jobs.nestjs.com) to find or post job opportunities.
-
----
-
-## Support
-
-NestJS is an open-source framework licensed under MIT. For support, consider joining our community or exploring enterprise support options [here](https://docs.nestjs.com/support).
-
----
-
-## License
-
-The **People Analytics System** is [MIT licensed](https://opensource.org/licenses/MIT).
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
