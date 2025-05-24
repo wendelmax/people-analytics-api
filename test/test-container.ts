@@ -46,10 +46,8 @@ export class TestContainer {
 
     for (const { tablename } of tables) {
       if (tablename !== '_prisma_migrations') {
-        await this.prisma.$executeRawUnsafe(
-          `TRUNCATE TABLE "public"."${tablename}" CASCADE;`,
-        );
+        await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE "public"."${tablename}" CASCADE;`);
       }
     }
   }
-} 
+}

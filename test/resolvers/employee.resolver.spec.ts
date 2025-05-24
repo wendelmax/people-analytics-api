@@ -84,7 +84,7 @@ describe('EmployeeResolver (e2e)', () => {
         });
 
         const query = gql`
-          query($id: ID!) {
+          query ($id: ID!) {
             employee(id: $id) {
               id
               name
@@ -110,7 +110,7 @@ describe('EmployeeResolver (e2e)', () => {
 
       it('should return null for non-existent employee', async () => {
         const query = gql`
-          query($id: ID!) {
+          query ($id: ID!) {
             employee(id: $id) {
               id
               name
@@ -135,7 +135,7 @@ describe('EmployeeResolver (e2e)', () => {
     describe('createEmployee', () => {
       it('should create a new employee', async () => {
         const mutation = gql`
-          mutation($input: CreateEmployeeInput!) {
+          mutation ($input: CreateEmployeeInput!) {
             createEmployee(input: $input) {
               id
               name
@@ -182,7 +182,7 @@ describe('EmployeeResolver (e2e)', () => {
         });
 
         const mutation = gql`
-          mutation($id: ID!, $input: UpdateEmployeeInput!) {
+          mutation ($id: ID!, $input: UpdateEmployeeInput!) {
             updateEmployee(id: $id, input: $input) {
               id
               name
@@ -225,7 +225,7 @@ describe('EmployeeResolver (e2e)', () => {
         });
 
         const mutation = gql`
-          mutation($id: ID!) {
+          mutation ($id: ID!) {
             deleteEmployee(id: $id) {
               success
             }
@@ -250,4 +250,4 @@ describe('EmployeeResolver (e2e)', () => {
       });
     });
   });
-}); 
+});

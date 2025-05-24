@@ -64,9 +64,7 @@ describe('EmployeeController (e2e)', () => {
         ],
       });
 
-      const response = await request(app.getHttpServer())
-        .get('/employees')
-        .expect(200);
+      const response = await request(app.getHttpServer()).get('/employees').expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
       expect(response.body.length).toBe(2);
@@ -96,9 +94,7 @@ describe('EmployeeController (e2e)', () => {
     });
 
     it('should return 404 for non-existent employee', async () => {
-      await request(app.getHttpServer())
-        .get('/employees/999')
-        .expect(404);
+      await request(app.getHttpServer()).get('/employees/999').expect(404);
     });
   });
 
@@ -141,9 +137,7 @@ describe('EmployeeController (e2e)', () => {
         },
       });
 
-      await request(app.getHttpServer())
-        .delete(`/employees/${employee.id}`)
-        .expect(200);
+      await request(app.getHttpServer()).delete(`/employees/${employee.id}`).expect(200);
 
       const deletedEmployee = await prisma.employee.findUnique({
         where: { id: employee.id },
@@ -152,4 +146,4 @@ describe('EmployeeController (e2e)', () => {
       expect(deletedEmployee).toBeNull();
     });
   });
-}); 
+});
