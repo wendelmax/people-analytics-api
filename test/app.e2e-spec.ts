@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { PrismaService } from '../src/prisma/prisma.service';
+
+import { AppModule } from '../src/app/app.module';
+import { PrismaService } from '../src/infrastructure/database/prisma/prisma.service';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -31,8 +32,16 @@ describe('AppController (e2e)', () => {
     let skillId: number;
 
     it('POST /skills - create a skill', async () => {
-      const skillData = { name: 'TypeScript', type: 'HARD', description: 'JavaScript superset', category: 'Language' };
-      const response = await request(app.getHttpServer()).post('/skills').send(skillData).expect(201);
+      const skillData = {
+        name: 'TypeScript',
+        type: 'HARD',
+        description: 'JavaScript superset',
+        category: 'Language',
+      };
+      const response = await request(app.getHttpServer())
+        .post('/skills')
+        .send(skillData)
+        .expect(201);
       skillId = response.body.id;
       expect(response.body.name).toBe(skillData.name);
     });
@@ -49,7 +58,10 @@ describe('AppController (e2e)', () => {
 
     it('PUT /skills/:id - update a skill', async () => {
       const updateData = { name: 'TypeScript Updated' };
-      const response = await request(app.getHttpServer()).put(`/skills/${skillId}`).send(updateData).expect(200);
+      const response = await request(app.getHttpServer())
+        .put(`/skills/${skillId}`)
+        .send(updateData)
+        .expect(200);
       expect(response.body.name).toBe(updateData.name);
     });
 
@@ -64,7 +76,10 @@ describe('AppController (e2e)', () => {
 
     it('POST /employees - create an employee', async () => {
       const employeeData = { name: 'John Doe', email: 'johndoe@example.com', password: 'secret' };
-      const response = await request(app.getHttpServer()).post('/employees').send(employeeData).expect(201);
+      const response = await request(app.getHttpServer())
+        .post('/employees')
+        .send(employeeData)
+        .expect(201);
       employeeId = response.body.id;
       expect(response.body.name).toBe(employeeData.name);
     });
@@ -75,42 +90,69 @@ describe('AppController (e2e)', () => {
     });
 
     it('GET /employees/:id - find an employee by ID', async () => {
-      const response = await request(app.getHttpServer()).get(`/employees/${employeeId}`).expect(200);
+      const response = await request(app.getHttpServer())
+        .get(`/employees/${employeeId}`)
+        .expect(200);
       expect(response.body).toHaveProperty('id', employeeId);
     });
 
     it('PUT /employees/:id - update an employee', async () => {
       const updateData = { name: 'Jane Doe' };
-      const response = await request(app.getHttpServer()).put(`/employees/${employeeId}`).send(updateData).expect(200);
+      const response = await request(app.getHttpServer())
+        .put(`/employees/${employeeId}`)
+        .send(updateData)
+        .expect(200);
       expect(response.body.name).toBe(updateData.name);
     });
 
     it('DELETE /employees/:id - delete an employee', async () => {
       await request(app.getHttpServer()).delete(`/employees/${employeeId}`).expect(200);
     });
+
+    it('should create a new employee', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/employees')
+        .send({
+          name: 'Test Employee',
+          email: 'test@example.com',
+          phone: '1234567890',
+          hireDate: new Date(),
+          departmentId: 1,
+          skillIds: [1, 2],
+        })
+        .expect(201);
+
+      expect(response.body).toHaveProperty('id');
+    });
   });
 
   // Organizational Structure Module
   describe('/organizational-structure', () => {
     let departmentId: number;
-    let positionId: number;
 
     it('POST /organizational-structure/departments - create a department', async () => {
       const deptData = { name: 'Engineering' };
-      const response = await request(app.getHttpServer()).post('/organizational-structure/departments').send(deptData).expect(201);
+      const response = await request(app.getHttpServer())
+        .post('/organizational-structure/departments')
+        .send(deptData)
+        .expect(201);
       departmentId = response.body.id;
       expect(response.body.name).toBe(deptData.name);
     });
 
     it('POST /organizational-structure/positions - create a position', async () => {
       const posData = { name: 'Developer', department_id: departmentId };
-      const response = await request(app.getHttpServer()).post('/organizational-structure/positions').send(posData).expect(201);
-      positionId = response.body.id;
+      const response = await request(app.getHttpServer())
+        .post('/organizational-structure/positions')
+        .send(posData)
+        .expect(201);
       expect(response.body.name).toBe(posData.name);
     });
 
     it('DELETE /organizational-structure/departments/:id - delete a department', async () => {
-      await request(app.getHttpServer()).delete(`/organizational-structure/departments/${departmentId}`).expect(200);
+      await request(app.getHttpServer())
+        .delete(`/organizational-structure/departments/${departmentId}`)
+        .expect(200);
     });
   });
 
@@ -119,8 +161,16 @@ describe('AppController (e2e)', () => {
     let devItemId: number;
 
     it('POST /development - create a development item', async () => {
-      const devData = { name: 'NestJS Basics', type: 'TRAINING', description: 'Intro to NestJS', link: 'https://nestjs.com' };
-      const response = await request(app.getHttpServer()).post('/development').send(devData).expect(201);
+      const devData = {
+        name: 'NestJS Basics',
+        type: 'TRAINING',
+        description: 'Intro to NestJS',
+        link: 'https://nestjs.com',
+      };
+      const response = await request(app.getHttpServer())
+        .post('/development')
+        .send(devData)
+        .expect(201);
       devItemId = response.body.id;
       expect(response.body.name).toBe(devData.name);
     });
@@ -136,7 +186,10 @@ describe('AppController (e2e)', () => {
 
     it('POST /feedback - create feedback', async () => {
       const feedbackData = { employee_id: 1, comment: 'Great progress', sentiment: 'POSITIVE' };
-      const response = await request(app.getHttpServer()).post('/feedback').send(feedbackData).expect(201);
+      const response = await request(app.getHttpServer())
+        .post('/feedback')
+        .send(feedbackData)
+        .expect(201);
       feedbackId = response.body.id;
       expect(response.body.comment).toBe(feedbackData.comment);
     });
@@ -151,14 +204,23 @@ describe('AppController (e2e)', () => {
     let notificationId: number;
 
     it('POST /notifications - create a notification', async () => {
-      const notificationData = { employee_id: 1, title: 'New Training Available', message: 'Check out the new NestJS training' };
-      const response = await request(app.getHttpServer()).post('/notifications').send(notificationData).expect(201);
+      const notificationData = {
+        employee_id: 1,
+        title: 'New Training Available',
+        message: 'Check out the new NestJS training',
+      };
+      const response = await request(app.getHttpServer())
+        .post('/notifications')
+        .send(notificationData)
+        .expect(201);
       notificationId = response.body.id;
       expect(response.body.title).toBe(notificationData.title);
     });
 
     it('PUT /notifications/:id/read - mark as read', async () => {
-      const response = await request(app.getHttpServer()).put(`/notifications/${notificationId}/read`).expect(200);
+      const response = await request(app.getHttpServer())
+        .put(`/notifications/${notificationId}/read`)
+        .expect(200);
       expect(response.body.read).toBe(true);
     });
 
@@ -171,7 +233,10 @@ describe('AppController (e2e)', () => {
   describe('/chatbot-interactions', () => {
     it('POST /chatbot-interactions - create a chatbot interaction', async () => {
       const interactionData = { employee_id: 1, user_message: 'What are my goals?' };
-      const response = await request(app.getHttpServer()).post('/chatbot-interactions').send(interactionData).expect(201);
+      const response = await request(app.getHttpServer())
+        .post('/chatbot-interactions')
+        .send(interactionData)
+        .expect(201);
       expect(response.body.user_message).toBe(interactionData.user_message);
     });
   });
