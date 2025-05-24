@@ -314,29 +314,32 @@ model Skill {
 }
 
 model Project {
-  id          String     @id @default(uuid())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
   startDate   DateTime
   endDate     DateTime?
-  status      String
-  employees   Employee[]
+  status      ProjectStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees   EmployeeProject[]
   skills      Skill[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
 }
 
 model Training {
-  id          String     @id @default(uuid())
+  id          Int      @id @default(autoincrement())
   name        String
   description String?
   startDate   DateTime
   endDate     DateTime?
-  status      String
-  employees   Employee[]
+  type        TrainingType
+  status      TrainingStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees   EmployeeTraining[]
   skills      Skill[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
 }
 
 model Performance {
@@ -643,19 +646,6 @@ model EmployeeMetrics {
   @@unique([employeeId])
 }
 
-// Projects model
-model Project {
-  id            Int             @id @default(autoincrement())
-  name          String
-  description   String?
-  startDate     DateTime
-  endDate       DateTime?
-  status        ProjectStatus
-  employeeProjects EmployeeProject[]
-
-  @@map("projects")
-}
-
 // Employee-Project relationship
 model EmployeeProject {
   id            Int       @id @default(autoincrement())
@@ -818,19 +808,6 @@ model JobRole {
 }
 
 // Modelos de Treinamento
-model Training {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  type        TrainingType
-  difficulty  TrainingDifficulty
-  skills      SkillProfile[] @relation("TrainingSkills")
-  careerStages CareerStage[] @relation("CareerStageTrainings")
-  employeeTrainings EmployeeTraining[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
 model EmployeeTraining {
   id          Int      @id @default(autoincrement())
   employeeId  Int
