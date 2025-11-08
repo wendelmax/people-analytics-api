@@ -1,4 +1,4 @@
-import { Field, ObjectType, ID } from '@nestjs/graphql';
+import { Field, ObjectType, ID, GraphQLISODateTime } from '@nestjs/graphql';
 
 @ObjectType()
 export class Employee {
@@ -11,15 +11,30 @@ export class Employee {
   @Field()
   email: string;
 
-  @Field()
-  position: string;
+  @Field({ nullable: true })
+  phone?: string;
+
+  @Field(() => GraphQLISODateTime)
+  hireDate: Date;
 
   @Field()
-  department: string;
+  departmentId: string;
+
+  @Field({ nullable: true })
+  departmentName?: string | null;
 
   @Field()
+  positionId: string;
+
+  @Field({ nullable: true })
+  positionTitle?: string | null;
+
+  @Field(() => [ID])
+  skillIds: string[];
+
+  @Field(() => GraphQLISODateTime)
   createdAt: Date;
 
-  @Field()
+  @Field(() => GraphQLISODateTime)
   updatedAt: Date;
 }

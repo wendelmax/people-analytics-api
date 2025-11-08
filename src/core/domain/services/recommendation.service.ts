@@ -1,66 +1,75 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateRecommendationDto } from '@application/graphql/dto/create-recommendation.dto';
-import { UpdateRecommendationDto } from '@application/graphql/dto/update-recommendation.dto';
-import { Recommendation } from '@application/graphql/types/recommendation.type';
+import {
+  CreateRecommendationDto,
+  UpdateRecommendationDto,
+} from '@application/api/dto/recommendation.dto';
+import {
+  Prisma,
+  RecommendationPriority,
+  RecommendationSource,
+  RecommendationStatus,
+} from '@prisma/client';
 
 @Injectable()
 export class RecommendationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Recommendation[]> {
-    const result = await this.prisma.recommendation.findMany({
+  async findAll(): Promise<RecommendationModel[]> {
+    const recommendations = await this.prisma.recommendation.findMany({
       include: {
         employee: true,
         skills: true,
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return result.map((recommendation) => ({
-      id: recommendation.id.toString(),
-      employeeId: recommendation.employeeId.toString(),
-      title: recommendation.title,
-      description: recommendation.description,
-      type: recommendation.type,
-      priority: recommendation.priority,
-      status: recommendation.status,
-      skillIds: recommendation.skills.map((s) => s.id.toString()),
-      createdAt: recommendation.createdAt,
-      updatedAt: recommendation.updatedAt,
-    }));
+    return recommendations.map((recommendation) => this.mapToModel(recommendation));
   }
 
-  async findById(id: string): Promise<Recommendation> {
-    const result = await this.prisma.recommendation.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<RecommendationModel> {
+    const recommendation = await this.prisma.recommendation.findUnique({
+      where: { id },
       include: {
         employee: true,
         skills: true,
       },
     });
 
-    if (!result) {
+    if (!recommendation) {
       throw new NotFoundException(`Recommendation with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      description: result.description,
-      type: result.type,
-      priority: result.priority,
-      status: result.status,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(recommendation);
   }
 
-  async findByEmployeeId(employeeId: string): Promise<Recommendation[]> {
-    const result = await this.prisma.recommendation.findMany({
-      where: {
-        employeeId: parseInt(employeeId),
+  async findByEmployeeId(employeeId: string): Promise<RecommendationModel[]> {
+    const recommendations = await this.prisma.recommendation.findMany({
+      where: { employeeId },
+      include: {
+        employee: true,
+        skills: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return recommendations.map((recommendation) => this.mapToModel(recommendation));
+  }
+
+  async create(data: CreateRecommendationDto): Promise<RecommendationModel> {
+    const recommendation = await this.prisma.recommendation.create({
+      data: {
+        employeeId: data.employeeId,
+        title: data.title,
+        description: data.description,
+        source: data.source,
+        priority: data.priority,
+        status: data.status,
+        skills: data.skillIds?.length
+          ? {
+              create: data.skillIds.map((skillId) => ({ skillId })),
+            }
+          : undefined,
       },
       include: {
         employee: true,
@@ -68,91 +77,84 @@ export class RecommendationService {
       },
     });
 
-    return result.map((recommendation) => ({
-      id: recommendation.id.toString(),
-      employeeId: recommendation.employeeId.toString(),
+    return this.mapToModel(recommendation);
+  }
+
+  async update(id: string, data: UpdateRecommendationDto): Promise<RecommendationModel> {
+    await this.ensureExists(id);
+
+    const recommendation = await this.prisma.recommendation.update({
+      where: { id },
+      data: {
+        title: data.title,
+        description: data.description,
+        source: data.source,
+        priority: data.priority,
+        status: data.status,
+        skills: data.skillIds
+          ? {
+              deleteMany: {},
+              create: data.skillIds.map((skillId) => ({ skillId })),
+            }
+          : undefined,
+      },
+      include: {
+        employee: true,
+        skills: true,
+      },
+    });
+
+    return this.mapToModel(recommendation);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.ensureExists(id);
+    await this.prisma.recommendation.delete({ where: { id } });
+    return true;
+  }
+
+  private async ensureExists(id: string): Promise<void> {
+    const exists = await this.prisma.recommendation.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!exists) {
+      throw new NotFoundException(`Recommendation with ID ${id} not found`);
+    }
+  }
+
+  private mapToModel(recommendation: RecommendationWithRelations): RecommendationModel {
+    return {
+      id: recommendation.id,
+      employeeId: recommendation.employeeId,
       title: recommendation.title,
-      description: recommendation.description,
-      type: recommendation.type,
+      description: recommendation.description ?? undefined,
+      source: recommendation.source,
       priority: recommendation.priority,
       status: recommendation.status,
-      skillIds: recommendation.skills.map((s) => s.id.toString()),
+      skillIds: recommendation.skills.map((link) => link.skillId),
       createdAt: recommendation.createdAt,
       updatedAt: recommendation.updatedAt,
-    }));
-  }
-
-  async create(data: CreateRecommendationDto): Promise<Recommendation> {
-    const result = await this.prisma.recommendation.create({
-      data: {
-        employeeId: parseInt(data.employeeId),
-        title: data.title,
-        description: data.description,
-        type: data.type,
-        priority: data.priority,
-        status: data.status,
-        skills: {
-          connect: data.skillIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        skills: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      description: result.description,
-      type: result.type,
-      priority: result.priority,
-      status: result.status,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
-  }
-
-  async update(id: string, data: UpdateRecommendationDto): Promise<Recommendation> {
-    const result = await this.prisma.recommendation.update({
-      where: { id: parseInt(id) },
-      data: {
-        title: data.title,
-        description: data.description,
-        type: data.type,
-        priority: data.priority,
-        status: data.status,
-        skills: {
-          set: data.skillIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        skills: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      description: result.description,
-      type: result.type,
-      priority: result.priority,
-      status: result.status,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
-  }
-
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
-    await this.prisma.recommendation.delete({
-      where: { id: parseInt(id) },
-    });
-    return { success: true };
   }
 }
+
+type RecommendationWithRelations = Prisma.RecommendationGetPayload<{
+  include: {
+    employee: true;
+    skills: true;
+  };
+}>;
+
+export type RecommendationModel = {
+  id: string;
+  employeeId: string;
+  title: string;
+  description?: string;
+  source: RecommendationSource;
+  priority: RecommendationPriority;
+  status: RecommendationStatus;
+  skillIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};

@@ -1,122 +1,116 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateDepartmentInput } from '@application/graphql/inputs/create-department.input';
-import { UpdateDepartmentInput } from '@application/graphql/inputs/update-department.input';
-import { Department } from '@application/graphql/types/department.type';
+import { CreateDepartmentDto, UpdateDepartmentDto } from '@application/api/dto/department.dto';
 
 @Injectable()
 export class DepartmentService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Department[]> {
-    const result = await this.prisma.department.findMany({
+  async findAll(): Promise<DepartmentModel[]> {
+    const departments = await this.prisma.department.findMany({
       include: {
+        positions: true,
         employees: true,
       },
+      orderBy: { name: 'asc' },
     });
 
-    return result.map((department) => ({
-      id: department.id.toString(),
-      name: department.name,
-      description: department.description,
-      employeeIds: department.employees.map((e) => e.id.toString()),
-      createdAt: department.createdAt,
-      updatedAt: department.updatedAt,
-    }));
+    return departments.map((department) => this.mapToModel(department));
   }
 
-  async findById(id: string): Promise<Department> {
-    const result = await this.prisma.department.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<DepartmentModel> {
+    const department = await this.prisma.department.findUnique({
+      where: { id },
       include: {
-        manager: true,
-        parent: true,
-        children: true,
+        positions: true,
         employees: true,
       },
     });
 
-    if (!result) {
+    if (!department) {
       throw new NotFoundException(`Department with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      name: result.name,
-      description: result.description,
-      managerId: result.managerId.toString(),
-      parentId: result.parentId?.toString(),
-      childIds: result.children.map((c) => c.id.toString()),
-      employeeIds: result.employees.map((e) => e.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(department);
   }
 
-  async create(data: CreateDepartmentInput): Promise<Department> {
-    const result = await this.prisma.department.create({
+  async create(data: CreateDepartmentDto): Promise<DepartmentModel> {
+    const department = await this.prisma.department.create({
       data: {
         name: data.name,
         description: data.description,
-        managerId: parseInt(data.managerId),
-        parentId: data.parentId ? parseInt(data.parentId) : null,
       },
       include: {
-        manager: true,
-        parent: true,
-        children: true,
+        positions: true,
         employees: true,
       },
     });
 
-    return {
-      id: result.id.toString(),
-      name: result.name,
-      description: result.description,
-      managerId: result.managerId.toString(),
-      parentId: result.parentId?.toString(),
-      childIds: result.children.map((c) => c.id.toString()),
-      employeeIds: result.employees.map((e) => e.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(department);
   }
 
-  async update(id: string, data: UpdateDepartmentInput): Promise<Department> {
-    const result = await this.prisma.department.update({
-      where: { id: parseInt(id) },
+  async update(id: string, data: UpdateDepartmentDto): Promise<DepartmentModel> {
+    await this.ensureExists(id);
+
+    const department = await this.prisma.department.update({
+      where: { id },
       data: {
         name: data.name,
         description: data.description,
-        managerId: data.managerId ? parseInt(data.managerId) : undefined,
-        parentId: data.parentId ? parseInt(data.parentId) : undefined,
       },
       include: {
-        manager: true,
-        parent: true,
-        children: true,
+        positions: true,
         employees: true,
       },
     });
 
-    return {
-      id: result.id.toString(),
-      name: result.name,
-      description: result.description,
-      managerId: result.managerId.toString(),
-      parentId: result.parentId?.toString(),
-      childIds: result.children.map((c) => c.id.toString()),
-      employeeIds: result.employees.map((e) => e.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(department);
   }
 
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
+  async delete(id: string): Promise<boolean> {
+    await this.ensureExists(id);
     await this.prisma.department.delete({
       where: { id },
     });
-    return { success: true };
+    return true;
+  }
+
+  private async ensureExists(id: string): Promise<void> {
+    const exists = await this.prisma.department.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
+      throw new NotFoundException(`Department with ID ${id} not found`);
+    }
+  }
+
+  private mapToModel(department: DepartmentWithRelations): DepartmentModel {
+    return {
+      id: department.id,
+      name: department.name,
+      description: department.description ?? undefined,
+      positionIds: department.positions.map((position) => position.id),
+      employeeIds: department.employees.map((employee) => employee.id),
+      createdAt: department.createdAt,
+      updatedAt: department.updatedAt,
+    };
   }
 }
+
+type DepartmentWithRelations = {
+  id: string;
+  name: string;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  positions: { id: string }[];
+  employees: { id: string }[];
+};
+
+export type DepartmentModel = {
+  id: string;
+  name: string;
+  description?: string;
+  positionIds: string[];
+  employeeIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};

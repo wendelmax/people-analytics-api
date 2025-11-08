@@ -1,144 +1,123 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateSkillDto } from '@application/graphql/dto/create-skill.dto';
-import { UpdateSkillDto } from '@application/graphql/dto/update-skill.dto';
-import { Skill } from '@application/graphql/types/skill.type';
+import { CreateSkillDto, UpdateSkillDto } from '@application/api/dto/skill.dto';
+import { SkillCategory, SkillLevel, SkillType } from '@prisma/client';
 
 @Injectable()
 export class SkillService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Skill[]> {
-    const result = await this.prisma.skill.findMany({
+  async findAll(): Promise<SkillModel[]> {
+    const skills = await this.prisma.skill.findMany({
       include: {
-        employees: true,
+        employeeLinks: true,
       },
+      orderBy: { name: 'asc' },
     });
 
-    return result.map((skill) => ({
-      id: skill.id.toString(),
-      name: skill.name,
-      description: skill.description,
-      category: skill.category,
-      level: skill.level,
-      employeeIds: skill.employees.map((e) => e.id.toString()),
-      createdAt: skill.createdAt,
-      updatedAt: skill.updatedAt,
-    }));
+    return skills.map((skill) => this.mapToModel(skill));
   }
 
-  async findById(id: string): Promise<Skill> {
-    const result = await this.prisma.skill.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<SkillModel> {
+    const skill = await this.prisma.skill.findUnique({
+      where: { id },
       include: {
-        employees: true,
+        employeeLinks: true,
       },
     });
 
-    if (!result) {
+    if (!skill) {
       throw new NotFoundException(`Skill with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      name: result.name,
-      description: result.description,
-      category: result.category,
-      level: result.level,
-      employeeIds: result.employees.map((e) => e.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(skill);
   }
 
-  async findByEmployeeId(employeeId: string): Promise<Skill[]> {
-    const result = await this.prisma.skill.findMany({
-      where: {
-        employees: {
-          some: {
-            id: parseInt(employeeId),
-          },
-        },
+  async create(data: CreateSkillDto): Promise<SkillModel> {
+    const skill = await this.prisma.skill.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        type: data.type,
+        category: data.category,
+        defaultLevel: data.defaultLevel ?? SkillLevel.BEGINNER,
       },
       include: {
-        employees: true,
+        employeeLinks: true,
       },
     });
 
-    return result.map((skill) => ({
-      id: skill.id.toString(),
+    return this.mapToModel(skill);
+  }
+
+  async update(id: string, data: UpdateSkillDto): Promise<SkillModel> {
+    await this.ensureExists(id);
+
+    const skill = await this.prisma.skill.update({
+      where: { id },
+      data: {
+        name: data.name,
+        description: data.description,
+        type: data.type,
+        category: data.category,
+        defaultLevel: data.defaultLevel,
+      },
+      include: {
+        employeeLinks: true,
+      },
+    });
+
+    return this.mapToModel(skill);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.ensureExists(id);
+    await this.prisma.skill.delete({ where: { id } });
+    return true;
+  }
+
+  private async ensureExists(id: string): Promise<void> {
+    const exists = await this.prisma.skill.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
+      throw new NotFoundException(`Skill with ID ${id} not found`);
+    }
+  }
+
+  private mapToModel(skill: SkillWithRelations): SkillModel {
+    return {
+      id: skill.id,
       name: skill.name,
-      description: skill.description,
+      description: skill.description ?? undefined,
+      type: skill.type,
       category: skill.category,
-      level: skill.level,
-      employeeIds: skill.employees.map((e) => e.id.toString()),
+      defaultLevel: skill.defaultLevel,
+      employeeIds: skill.employeeLinks.map((link) => link.employeeId),
       createdAt: skill.createdAt,
       updatedAt: skill.updatedAt,
-    }));
-  }
-
-  async create(data: CreateSkillDto): Promise<Skill> {
-    const result = await this.prisma.skill.create({
-      data: {
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        level: data.level,
-        employees: {
-          connect: data.employeeIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employees: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      name: result.name,
-      description: result.description,
-      category: result.category,
-      level: result.level,
-      employeeIds: result.employees.map((e) => e.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
-  }
-
-  async update(id: string, data: UpdateSkillDto): Promise<Skill> {
-    const result = await this.prisma.skill.update({
-      where: { id: parseInt(id) },
-      data: {
-        name: data.name,
-        description: data.description,
-        category: data.category,
-        level: data.level,
-        employees: {
-          set: data.employeeIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employees: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      name: result.name,
-      description: result.description,
-      category: result.category,
-      level: result.level,
-      employeeIds: result.employees.map((e) => e.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
-  }
-
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
-    await this.prisma.skill.delete({
-      where: { id: parseInt(id) },
-    });
-    return { success: true };
   }
 }
+
+type SkillWithRelations = {
+  id: string;
+  name: string;
+  description: string | null;
+  type: SkillType;
+  category: SkillCategory;
+  defaultLevel: SkillLevel;
+  createdAt: Date;
+  updatedAt: Date;
+  employeeLinks: { employeeId: string }[];
+};
+
+export type SkillModel = {
+  id: string;
+  name: string;
+  description?: string;
+  type: SkillType;
+  category: SkillCategory;
+  defaultLevel: SkillLevel;
+  employeeIds: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};

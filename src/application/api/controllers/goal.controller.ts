@@ -1,59 +1,60 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthDecorator } from '../auth/decorator/auth.decorator';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
+import { GoalService } from '@core/domain/services/goal.service';
+import { CreateGoalDto, UpdateGoalDto } from '@application/api/dto/goal.dto';
 
-import { GoalService } from '../../../domain/goal/services/goal.service';
-import { CreateGoalDto } from '?';
-import { UpdateGoalDto } from '?';
-
-@ApiTags('goal')
-@Controller('goal')
+@ApiTags('goals')
+@Controller('goals')
 @ApiBearerAuth()
 export class GoalController {
   constructor(private readonly goalService: GoalService) {}
 
   @Post()
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new goal record' })
-  @ApiResponse({ status: 201, description: 'Goal record created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createGoalDto: CreateGoalDto) {
-    return this.goalService.create(createGoalDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Create goal' })
+  @ApiResponse({ status: 201, description: 'Goal created successfully' })
+  create(@Body() dto: CreateGoalDto) {
+    return this.goalService.create(dto);
   }
 
   @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all goal records' })
-  @ApiResponse({ status: 200, description: 'List of goal records' })
+  @ApiOperation({ summary: 'List goals' })
   findAll() {
     return this.goalService.findAll();
   }
 
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get goal record by ID' })
-  @ApiResponse({ status: 200, description: 'Goal record details' })
-  @ApiResponse({ status: 404, description: 'Goal record not found' })
+  @ApiOperation({ summary: 'Get goal by ID' })
   findOne(@Param('id') id: string) {
-    return this.goalService.findOne(id);
+    return this.goalService.findById(id);
   }
 
   @Patch(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update goal record details' })
-  @ApiResponse({ status: 200, description: 'Goal record updated successfully' })
-  @ApiResponse({ status: 404, description: 'Goal record not found' })
-  update(@Param('id') id: string, @Body() updateGoalDto: UpdateGoalDto) {
-    return this.goalService.update(id, updateGoalDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Update goal' })
+  update(@Param('id') id: string, @Body() dto: UpdateGoalDto) {
+    return this.goalService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a goal record' })
-  @ApiResponse({ status: 200, description: 'Goal record removed successfully' })
-  @ApiResponse({ status: 404, description: 'Goal record not found' })
-  remove(@Param('id') id: string) {
-    return this.goalService.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete goal' })
+  async remove(@Param('id') id: string) {
+    await this.goalService.delete(id);
   }
 }

@@ -1,57 +1,63 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { DevelopmentService } from '@core/domain/development/services/development.service';
-import { CreateDevelopmentDto, UpdateDevelopmentDto } from '@shared/dto/base.dto';
+import { DevelopmentPlanService } from '@core/domain/services/development-plan.service';
+import {
+  CreateDevelopmentPlanDto,
+  UpdateDevelopmentPlanDto,
+} from '@application/api/dto/development-plan.dto';
 
-@ApiTags('development')
-@Controller('development')
+@ApiTags('development-plans')
+@Controller('development-plans')
 @ApiBearerAuth()
 export class DevelopmentController {
-  constructor(private readonly developmentService: DevelopmentService) {}
+  constructor(private readonly developmentPlanService: DevelopmentPlanService) {}
 
   @Post()
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new development plan' })
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Create development plan' })
   @ApiResponse({ status: 201, description: 'Development plan created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createDevelopmentDto: CreateDevelopmentDto) {
-    return this.developmentService.create(createDevelopmentDto);
+  create(@Body() dto: CreateDevelopmentPlanDto) {
+    return this.developmentPlanService.create(dto);
   }
 
   @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all development plans' })
-  @ApiResponse({ status: 200, description: 'List of development plans' })
+  @ApiOperation({ summary: 'List development plans' })
   findAll() {
-    return this.developmentService.findAll();
+    return this.developmentPlanService.findAll();
   }
 
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Get development plan by ID' })
-  @ApiResponse({ status: 200, description: 'Development plan details' })
-  @ApiResponse({ status: 404, description: 'Development plan not found' })
   findOne(@Param('id') id: string) {
-    return this.developmentService.findOne(id);
+    return this.developmentPlanService.findById(id);
   }
 
   @Patch(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update development plan details' })
-  @ApiResponse({ status: 200, description: 'Development plan updated successfully' })
-  @ApiResponse({ status: 404, description: 'Development plan not found' })
-  update(@Param('id') id: string, @Body() updateDevelopmentDto: UpdateDevelopmentDto) {
-    return this.developmentService.update(id, updateDevelopmentDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Update development plan' })
+  update(@Param('id') id: string, @Body() dto: UpdateDevelopmentPlanDto) {
+    return this.developmentPlanService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a development plan' })
-  @ApiResponse({ status: 200, description: 'Development plan removed successfully' })
-  @ApiResponse({ status: 404, description: 'Development plan not found' })
-  remove(@Param('id') id: string) {
-    return this.developmentService.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete development plan' })
+  async remove(@Param('id') id: string) {
+    await this.developmentPlanService.delete(id);
   }
 }

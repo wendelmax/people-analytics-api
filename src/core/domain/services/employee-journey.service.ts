@@ -1,164 +1,249 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateEmployeeJourneyInput } from '@application/graphql/inputs/create-employee-journey.input';
-import { UpdateEmployeeJourneyInput } from '@application/graphql/inputs/update-employee-journey.input';
-import { EmployeeJourney } from '@application/graphql/types/employee-journey.type';
+import {
+  CreateEmployeeJourneyDto,
+  UpdateEmployeeJourneyDto,
+  CreateJourneyTouchpointDto,
+  UpdateJourneyTouchpointDto,
+} from '@application/api/dto/employee-journey.dto';
+import { EmployeeJourneyStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class EmployeeJourneyService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<EmployeeJourney[]> {
-    const result = await this.prisma.employeeJourney.findMany({
+  async findAll(): Promise<EmployeeJourneyModel[]> {
+    const journeys = await this.prisma.employeeJourney.findMany({
       include: {
-        employee: true,
         department: true,
         position: true,
+        touchpoints: {
+          orderBy: { occurredAt: 'asc' },
+        },
       },
+      orderBy: { startDate: 'desc' },
     });
 
-    return result.map((journey) => ({
-      id: journey.id.toString(),
-      employeeId: journey.employeeId.toString(),
-      type: journey.type,
-      description: journey.description,
-      startDate: journey.startDate,
-      endDate: journey.endDate,
-      status: journey.status,
-      departmentId: journey.departmentId?.toString(),
-      positionId: journey.positionId?.toString(),
-      createdAt: journey.createdAt,
-      updatedAt: journey.updatedAt,
-    }));
+    return journeys.map((journey) => this.mapJourney(journey));
   }
 
-  async findById(id: string): Promise<EmployeeJourney> {
-    const result = await this.prisma.employeeJourney.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<EmployeeJourneyModel> {
+    const journey = await this.prisma.employeeJourney.findUnique({
+      where: { id },
       include: {
-        employee: true,
         department: true,
         position: true,
+        touchpoints: {
+          orderBy: { occurredAt: 'asc' },
+        },
       },
     });
 
-    if (!result) {
+    if (!journey) {
       throw new NotFoundException(`Employee journey with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      type: result.type,
-      description: result.description,
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      departmentId: result.departmentId?.toString(),
-      positionId: result.positionId?.toString(),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapJourney(journey);
   }
 
-  async findByEmployeeId(employeeId: string): Promise<EmployeeJourney[]> {
-    const result = await this.prisma.employeeJourney.findMany({
-      where: {
-        employeeId: parseInt(employeeId),
-      },
+  async findByEmployee(employeeId: string): Promise<EmployeeJourneyModel[]> {
+    const journeys = await this.prisma.employeeJourney.findMany({
+      where: { employeeId },
       include: {
-        employee: true,
-        position: true,
         department: true,
+        position: true,
+        touchpoints: {
+          orderBy: { occurredAt: 'asc' },
+        },
+      },
+      orderBy: { startDate: 'desc' },
+    });
+
+    return journeys.map((journey) => this.mapJourney(journey));
+  }
+
+  async create(data: CreateEmployeeJourneyDto): Promise<EmployeeJourneyModel> {
+    const journey = await this.prisma.employeeJourney.create({
+      data: {
+        employeeId: data.employeeId,
+        departmentId: data.departmentId,
+        positionId: data.positionId,
+        type: data.type,
+        description: data.description,
+        status: data.status,
+        startDate: new Date(data.startDate),
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+      },
+      include: this.defaultInclude,
+    });
+
+    return this.mapJourney(journey);
+  }
+
+  async update(id: string, data: UpdateEmployeeJourneyDto): Promise<EmployeeJourneyModel> {
+    await this.ensureJourneyExists(id);
+
+    const journey = await this.prisma.employeeJourney.update({
+      where: { id },
+      data: {
+        employeeId: data.employeeId,
+        departmentId: data.departmentId,
+        positionId: data.positionId,
+        type: data.type,
+        description: data.description,
+        status: data.status,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        endDate: data.endDate ? new Date(data.endDate) : undefined,
+      },
+      include: this.defaultInclude,
+    });
+
+    return this.mapJourney(journey);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.ensureJourneyExists(id);
+    await this.prisma.employeeJourney.delete({ where: { id } });
+    return true;
+  }
+
+  async findAllTouchpoints(journeyId: string): Promise<JourneyTouchpointModel[]> {
+    await this.ensureJourneyExists(journeyId);
+
+    const touchpoints = await this.prisma.employeeJourneyTouchpoint.findMany({
+      where: { journeyId },
+      orderBy: { occurredAt: 'asc' },
+    });
+
+    return touchpoints.map((touchpoint) => this.mapTouchpoint(touchpoint));
+  }
+
+  async createTouchpoint(data: CreateJourneyTouchpointDto): Promise<JourneyTouchpointModel> {
+    await this.ensureJourneyExists(data.journeyId);
+
+    const touchpoint = await this.prisma.employeeJourneyTouchpoint.create({
+      data: {
+        journeyId: data.journeyId,
+        title: data.title,
+        description: data.description,
+        occurredAt: new Date(data.occurredAt),
       },
     });
 
-    return result.map((journey) => ({
-      id: journey.id.toString(),
-      employeeId: journey.employeeId.toString(),
-      positionId: journey.positionId?.toString(),
-      departmentId: journey.departmentId?.toString(),
-      startDate: journey.startDate,
-      endDate: journey.endDate,
+    return this.mapTouchpoint(touchpoint);
+  }
+
+  async updateTouchpoint(
+    id: string,
+    data: UpdateJourneyTouchpointDto,
+  ): Promise<JourneyTouchpointModel> {
+    const touchpoint = await this.prisma.employeeJourneyTouchpoint.update({
+      where: { id },
+      data: {
+        journeyId: data.journeyId,
+        title: data.title,
+        description: data.description,
+        occurredAt: data.occurredAt ? new Date(data.occurredAt) : undefined,
+      },
+    });
+
+    return this.mapTouchpoint(touchpoint);
+  }
+
+  async removeTouchpoint(id: string): Promise<boolean> {
+    await this.prisma.employeeJourneyTouchpoint.delete({ where: { id } });
+    return true;
+  }
+
+  private async ensureJourneyExists(id: string): Promise<void> {
+    const exists = await this.prisma.employeeJourney.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!exists) {
+      throw new NotFoundException(`Employee journey with ID ${id} not found`);
+    }
+  }
+
+  private mapJourney(journey: EmployeeJourneyRecord): EmployeeJourneyModel {
+    return {
+      id: journey.id,
+      employeeId: journey.employeeId,
+      departmentId: journey.departmentId ?? undefined,
+      departmentName: journey.department?.name ?? undefined,
+      positionId: journey.positionId ?? undefined,
+      positionTitle: journey.position?.title ?? undefined,
+      type: journey.type,
+      description: journey.description ?? undefined,
       status: journey.status,
+      startDate: journey.startDate,
+      endDate: journey.endDate ?? undefined,
+      touchpoints: journey.touchpoints
+        .slice()
+        .sort((a, b) => a.occurredAt.getTime() - b.occurredAt.getTime())
+        .map((touchpoint) => this.mapTouchpoint(touchpoint)),
       createdAt: journey.createdAt,
       updatedAt: journey.updatedAt,
-    }));
-  }
-
-  async create(data: CreateEmployeeJourneyInput): Promise<EmployeeJourney> {
-    const result = await this.prisma.employeeJourney.create({
-      data: {
-        employeeId: parseInt(data.employeeId),
-        type: data.type,
-        description: data.description,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
-        departmentId: data.departmentId ? parseInt(data.departmentId) : null,
-        positionId: data.positionId ? parseInt(data.positionId) : null,
-      },
-      include: {
-        employee: true,
-        department: true,
-        position: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      type: result.type,
-      description: result.description,
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      departmentId: result.departmentId?.toString(),
-      positionId: result.positionId?.toString(),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
   }
 
-  async update(id: string, data: UpdateEmployeeJourneyInput): Promise<EmployeeJourney> {
-    const result = await this.prisma.employeeJourney.update({
-      where: { id: parseInt(id) },
-      data: {
-        type: data.type,
-        description: data.description,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
-        departmentId: data.departmentId ? parseInt(data.departmentId) : undefined,
-        positionId: data.positionId ? parseInt(data.positionId) : undefined,
-      },
-      include: {
-        employee: true,
-        department: true,
-        position: true,
-      },
-    });
-
+  private mapTouchpoint(touchpoint: EmployeeJourneyTouchpointRecord): JourneyTouchpointModel {
     return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      type: result.type,
-      description: result.description,
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      departmentId: result.departmentId?.toString(),
-      positionId: result.positionId?.toString(),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
+      id: touchpoint.id,
+      journeyId: touchpoint.journeyId,
+      title: touchpoint.title,
+      description: touchpoint.description ?? undefined,
+      occurredAt: touchpoint.occurredAt,
+      createdAt: touchpoint.createdAt,
+      updatedAt: touchpoint.updatedAt,
     };
   }
 
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
-    await this.prisma.employeeJourney.delete({
-      where: { id: parseInt(id) },
-    });
-    return { success: true };
+  private get defaultInclude() {
+    return {
+      department: true,
+      position: true,
+      touchpoints: {
+        orderBy: { occurredAt: 'asc' },
+      },
+    } satisfies Prisma.EmployeeJourneyInclude;
   }
 }
+
+type EmployeeJourneyRecord = Prisma.EmployeeJourneyGetPayload<{
+  include: {
+    department: true;
+    position: true;
+    touchpoints: true;
+  };
+}>;
+
+type EmployeeJourneyTouchpointRecord =
+  Prisma.EmployeeJourneyTouchpointGetPayload<Prisma.EmployeeJourneyTouchpointDefaultArgs>;
+
+export type EmployeeJourneyModel = {
+  id: string;
+  employeeId: string;
+  departmentId?: string;
+  departmentName?: string;
+  positionId?: string;
+  positionTitle?: string;
+  type: string;
+  description?: string;
+  status: EmployeeJourneyStatus;
+  startDate: Date;
+  endDate?: Date;
+  touchpoints: JourneyTouchpointModel[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type JourneyTouchpointModel = {
+  id: string;
+  journeyId: string;
+  title: string;
+  description?: string;
+  occurredAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+};

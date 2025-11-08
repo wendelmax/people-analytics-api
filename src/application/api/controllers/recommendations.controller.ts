@@ -1,67 +1,63 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { RecommendationsService } from '@core/domain/recommendations/services/recommendations.service';
-import { CreateRecommendationDto, UpdateRecommendationDto } from '@shared/dto/base.dto';
+import { RecommendationService } from '@core/domain/services/recommendation.service';
+import {
+  CreateRecommendationDto,
+  UpdateRecommendationDto,
+} from '@application/api/dto/recommendation.dto';
 
 @ApiTags('recommendations')
 @Controller('recommendations')
 @ApiBearerAuth()
 export class RecommendationsController {
-  constructor(private readonly recommendationsService: RecommendationsService) {}
+  constructor(private readonly recommendationService: RecommendationService) {}
 
   @Post()
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new recommendation' })
+  @ApiOperation({ summary: 'Create recommendation' })
   @ApiResponse({ status: 201, description: 'Recommendation created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createRecommendationDto: CreateRecommendationDto) {
-    return this.recommendationsService.create(createRecommendationDto);
+  create(@Body() dto: CreateRecommendationDto) {
+    return this.recommendationService.create(dto);
   }
 
   @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all recommendations' })
-  @ApiResponse({ status: 200, description: 'List of recommendations' })
+  @ApiOperation({ summary: 'List recommendations' })
   findAll() {
-    return this.recommendationsService.findAll();
+    return this.recommendationService.findAll();
   }
 
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Get recommendation by ID' })
-  @ApiResponse({ status: 200, description: 'Recommendation details' })
-  @ApiResponse({ status: 404, description: 'Recommendation not found' })
   findOne(@Param('id') id: string) {
-    return this.recommendationsService.findOne(id);
+    return this.recommendationService.findById(id);
   }
 
   @Patch(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update recommendation details' })
-  @ApiResponse({ status: 200, description: 'Recommendation updated successfully' })
-  @ApiResponse({ status: 404, description: 'Recommendation not found' })
-  update(@Param('id') id: string, @Body() updateRecommendationDto: UpdateRecommendationDto) {
-    return this.recommendationsService.update(id, updateRecommendationDto);
+  @ApiOperation({ summary: 'Update recommendation' })
+  update(@Param('id') id: string, @Body() dto: UpdateRecommendationDto) {
+    return this.recommendationService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a recommendation' })
-  @ApiResponse({ status: 200, description: 'Recommendation removed successfully' })
-  @ApiResponse({ status: 404, description: 'Recommendation not found' })
-  remove(@Param('id') id: string) {
-    return this.recommendationsService.remove(id);
-  }
-
-  @Get('career/:employeeId')
-  suggestCareerPath(@Param('employeeId') employeeId: string) {
-    return this.recommendationsService.suggestCareerPath(+employeeId);
-  }
-
-  @Get('skills/:employeeId')
-  suggestSkills(@Param('employeeId') employeeId: string) {
-    return this.recommendationsService.suggestSkills(+employeeId);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete recommendation' })
+  async remove(@Param('id') id: string) {
+    await this.recommendationService.delete(id);
   }
 }

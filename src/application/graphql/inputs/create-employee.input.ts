@@ -1,4 +1,4 @@
-import { InputType, Field } from '@nestjs/graphql';
+import { InputType, Field, ID, GraphQLISODateTime } from '@nestjs/graphql';
 
 @InputType()
 export class CreateEmployeeInput {
@@ -8,9 +8,18 @@ export class CreateEmployeeInput {
   @Field()
   email: string;
 
-  @Field()
-  position: string;
+  @Field({ nullable: true })
+  phone?: string;
 
-  @Field()
-  department: string;
+  @Field(() => GraphQLISODateTime)
+  hireDate: Date;
+
+  @Field(() => ID)
+  departmentId: string;
+
+  @Field(() => ID)
+  positionId: string;
+
+  @Field(() => [ID], { nullable: true })
+  skillIds?: string[];
 }

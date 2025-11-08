@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { AdminService } from '@core/domain/admin/services/admin.service';
-import { CreateAdminDto, UpdateAdminDto } from '@shared/dto/base.dto';
+import { AdminService } from '@core/domain/services/admin.service';
+import { CreateAdminDto, UpdateAdminDto } from '@application/api/dto/admin.dto';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -12,45 +12,37 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Post()
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new admin record' })
-  @ApiResponse({ status: 201, description: 'Admin record created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createAdminDto: CreateAdminDto) {
-    return this.adminService.create(createAdminDto);
+  @AuthDecorator(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Create admin profile' })
+  @ApiResponse({ status: 201, description: 'Admin profile created successfully' })
+  create(@Body() dto: CreateAdminDto) {
+    return this.adminService.create(dto);
   }
 
   @Get()
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all admin records' })
-  @ApiResponse({ status: 200, description: 'List of admin records' })
+  @AuthDecorator(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiOperation({ summary: 'List admin profiles' })
   findAll() {
     return this.adminService.findAll();
   }
 
   @Get(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get admin record by ID' })
-  @ApiResponse({ status: 200, description: 'Admin record details' })
-  @ApiResponse({ status: 404, description: 'Admin record not found' })
+  @AuthDecorator(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get admin profile by ID' })
   findOne(@Param('id') id: string) {
     return this.adminService.findOne(id);
   }
 
   @Patch(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update admin record details' })
-  @ApiResponse({ status: 200, description: 'Admin record updated successfully' })
-  @ApiResponse({ status: 404, description: 'Admin record not found' })
-  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
-    return this.adminService.update(id, updateAdminDto);
+  @AuthDecorator(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update admin profile' })
+  update(@Param('id') id: string, @Body() dto: UpdateAdminDto) {
+    return this.adminService.update(id, dto);
   }
 
   @Delete(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove an admin record' })
-  @ApiResponse({ status: 200, description: 'Admin record removed successfully' })
-  @ApiResponse({ status: 404, description: 'Admin record not found' })
+  @AuthDecorator(UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Delete admin profile' })
   remove(@Param('id') id: string) {
     return this.adminService.remove(id);
   }

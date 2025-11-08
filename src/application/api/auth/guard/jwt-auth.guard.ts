@@ -4,6 +4,7 @@ import { UserRole } from '@core/common/enums/UserEnums';
 import { Code } from '@core/common/code/Code';
 import { Exception } from '@core/common/exception/Exception';
 import { HttpRequestWithUser, HttpJwtPayload } from '../type/auth.types';
+import { verify, JwtPayload } from 'jsonwebtoken';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -14,31 +15,22 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractTokenFromHeader(request);
 
     if (!token) {
-      return false;
+      throw Exception.new({ code: Code.UNAUTHORIZED_ERROR });
     }
 
-    try {
-      // Apenas extraímos os claims do token
-      const payload = this.parseJwt(token);
-      request.user = payload;
+    const payload = this.verifyToken(token);
+    request.user = payload;
 
-      // Verifica as roles necessárias
-      const requiredRoles = this.reflector.get<UserRole[]>('roles', context.getHandler()) || [];
+    const requiredRoles = this.reflector.get<UserRole[]>('roles', context.getHandler()) || [];
 
-      if (requiredRoles.length > 0) {
-        const hasRole = requiredRoles.includes(payload.role);
-        if (!hasRole) {
-          throw Exception.new({ code: Code.ACCESS_DENIED_ERROR });
-        }
+    if (requiredRoles.length > 0) {
+      const hasRole = requiredRoles.includes(payload.role);
+      if (!hasRole) {
+        throw Exception.new({ code: Code.ACCESS_DENIED_ERROR });
       }
-
-      return true;
-    } catch (error) {
-      if (error.code === Code.ACCESS_DENIED_ERROR) {
-        throw error;
-      }
-      return false;
     }
+
+    return true;
   }
 
   private extractTokenFromHeader(request: HttpRequestWithUser): string | undefined {
@@ -46,18 +38,33 @@ export class JwtAuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 
-  private parseJwt(token: string): HttpJwtPayload {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => {
-          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        })
-        .join(''),
-    );
+  private verifyToken(token: string): HttpJwtPayload {
+    const secret = process.env.JWT_SECRET;
 
-    return JSON.parse(jsonPayload);
+    if (!secret) {
+      throw new Error('JWT_SECRET is not configured');
+    }
+
+    try {
+      const decoded = verify(token, secret) as JwtPayload & Partial<HttpJwtPayload>;
+      const id = decoded.sub ?? decoded.id;
+      const email = decoded.email;
+      const role = decoded.role;
+
+      if (!id || !email || !role) {
+        throw Exception.new({ code: Code.UNAUTHORIZED_ERROR });
+      }
+
+      return {
+        id: String(id),
+        email: String(email),
+        role: role as UserRole,
+      };
+    } catch (error) {
+      if (error instanceof Exception) {
+        throw error;
+      }
+      throw Exception.new({ code: Code.UNAUTHORIZED_ERROR });
+    }
   }
 }

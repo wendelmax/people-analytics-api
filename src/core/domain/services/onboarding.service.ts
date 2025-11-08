@@ -1,158 +1,157 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateOnboardingDto } from '@application/graphql/dto/create-onboarding.dto';
-import { UpdateOnboardingDto } from '@application/graphql/dto/update-onboarding.dto';
-import { Onboarding } from '@application/graphql/types/onboarding.type';
+import { CreateOnboardingDto, UpdateOnboardingDto } from '@application/api/dto/onboarding.dto';
+import { OnboardingStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class OnboardingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Onboarding[]> {
-    const result = await this.prisma.onboarding.findMany({
+  async findAll(): Promise<OnboardingModel[]> {
+    const onboardings = await this.prisma.onboarding.findMany({
       include: {
-        employee: true,
         tasks: true,
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return result.map((onboarding) => ({
-      id: onboarding.id.toString(),
-      employeeId: onboarding.employeeId.toString(),
-      startDate: onboarding.startDate,
-      endDate: onboarding.endDate,
-      status: onboarding.status,
-      mentorId: onboarding.mentorId?.toString(),
-      notes: onboarding.notes,
-      taskIds: onboarding.tasks.map((t) => t.id.toString()),
-      createdAt: onboarding.createdAt,
-      updatedAt: onboarding.updatedAt,
-    }));
+    return onboardings.map((onboarding) => this.mapToModel(onboarding));
   }
 
-  async findById(id: string): Promise<Onboarding> {
-    const result = await this.prisma.onboarding.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<OnboardingModel> {
+    const onboarding = await this.prisma.onboarding.findUnique({
+      where: { id },
       include: {
-        employee: true,
         tasks: true,
       },
     });
 
-    if (!result) {
+    if (!onboarding) {
       throw new NotFoundException(`Onboarding with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      mentorId: result.mentorId?.toString(),
-      notes: result.notes,
-      taskIds: result.tasks.map((t) => t.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(onboarding);
   }
 
-  async findByEmployeeId(employeeId: string): Promise<Onboarding[]> {
-    const result = await this.prisma.onboarding.findMany({
-      where: {
-        employeeId: parseInt(employeeId),
+  async findByEmployee(employeeId: string): Promise<OnboardingModel[]> {
+    const onboardings = await this.prisma.onboarding.findMany({
+      where: { employeeId },
+      include: {
+        tasks: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return onboardings.map((onboarding) => this.mapToModel(onboarding));
+  }
+
+  async create(data: CreateOnboardingDto): Promise<OnboardingModel> {
+    const onboarding = await this.prisma.onboarding.create({
+      data: {
+        employeeId: data.employeeId,
+        status: data.status,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
+        tasks: data.tasks?.length
+          ? {
+              create: data.tasks.map((task) => ({
+                title: task.title,
+                description: task.description,
+                dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+                completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+              })),
+            }
+          : undefined,
       },
       include: {
-        employee: true,
         tasks: true,
       },
     });
 
-    return result.map((onboarding) => ({
-      id: onboarding.id.toString(),
-      employeeId: onboarding.employeeId.toString(),
-      startDate: onboarding.startDate,
-      endDate: onboarding.endDate,
+    return this.mapToModel(onboarding);
+  }
+
+  async update(id: string, data: UpdateOnboardingDto): Promise<OnboardingModel> {
+    await this.ensureExists(id);
+
+    const onboarding = await this.prisma.onboarding.update({
+      where: { id },
+      data: {
+        status: data.status,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
+        tasks: data.tasks
+          ? {
+              deleteMany: {},
+              create: data.tasks.map((task) => ({
+                title: task.title,
+                description: task.description,
+                dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+                completedAt: task.completedAt ? new Date(task.completedAt) : undefined,
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        tasks: true,
+      },
+    });
+
+    return this.mapToModel(onboarding);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.ensureExists(id);
+    await this.prisma.onboarding.delete({ where: { id } });
+    return true;
+  }
+
+  private mapToModel(onboarding: OnboardingWithRelations): OnboardingModel {
+    return {
+      id: onboarding.id,
+      employeeId: onboarding.employeeId,
       status: onboarding.status,
-      mentorId: onboarding.mentorId?.toString(),
-      notes: onboarding.notes,
-      taskIds: onboarding.tasks.map((t) => t.id.toString()),
+      startDate: onboarding.startDate ?? undefined,
+      completedAt: onboarding.completedAt ?? undefined,
+      tasks: onboarding.tasks.map((task) => ({
+        id: task.id,
+        title: task.title,
+        description: task.description ?? undefined,
+        dueDate: task.dueDate ?? undefined,
+        completedAt: task.completedAt ?? undefined,
+      })),
       createdAt: onboarding.createdAt,
       updatedAt: onboarding.updatedAt,
-    }));
-  }
-
-  async create(data: CreateOnboardingDto): Promise<Onboarding> {
-    const result = await this.prisma.onboarding.create({
-      data: {
-        employeeId: parseInt(data.employeeId),
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
-        mentorId: data.mentorId ? parseInt(data.mentorId) : undefined,
-        notes: data.notes,
-        tasks: {
-          connect: data.taskIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        tasks: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      mentorId: result.mentorId?.toString(),
-      notes: result.notes,
-      taskIds: result.tasks.map((t) => t.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
   }
 
-  async update(id: string, data: UpdateOnboardingDto): Promise<Onboarding> {
-    const result = await this.prisma.onboarding.update({
-      where: { id: parseInt(id) },
-      data: {
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
-        mentorId: data.mentorId ? parseInt(data.mentorId) : undefined,
-        notes: data.notes,
-        tasks: {
-          set: data.taskIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        tasks: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      mentorId: result.mentorId?.toString(),
-      notes: result.notes,
-      taskIds: result.tasks.map((t) => t.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
-  }
-
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
-    await this.prisma.onboarding.delete({
-      where: { id: parseInt(id) },
-    });
-    return { success: true };
+  private async ensureExists(id: string): Promise<void> {
+    const exists = await this.prisma.onboarding.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
+      throw new NotFoundException(`Onboarding with ID ${id} not found`);
+    }
   }
 }
+
+type OnboardingWithRelations = Prisma.OnboardingGetPayload<{
+  include: {
+    tasks: true;
+  };
+}>;
+
+export type OnboardingModel = {
+  id: string;
+  employeeId: string;
+  status: OnboardingStatus;
+  startDate?: Date;
+  completedAt?: Date;
+  tasks: {
+    id: string;
+    title: string;
+    description?: string;
+    dueDate?: Date;
+    completedAt?: Date;
+  }[];
+  createdAt: Date;
+  updatedAt: Date;
+};

@@ -1,12 +1,32 @@
-// Enums centralizados para todo o sistema
+generator client {
+  provider = "prisma-client-js"
+}
 
-// Tipos de Habilidades
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 enum SkillType {
   HARD
   SOFT
 }
 
-// Tipos de Feedback
+enum SkillCategory {
+  TECHNICAL
+  SOFT
+  LEADERSHIP
+  DOMAIN
+  CORE
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
 enum FeedbackType {
   PERFORMANCE
   SKILL
@@ -14,84 +34,12 @@ enum FeedbackType {
   PROJECT
 }
 
-// Status de Desenvolvimento
-enum DevelopmentStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-  BLOCKED
+enum SentimentType {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
 }
 
-// Tipos de Metas
-enum GoalType {
-  PERFORMANCE
-  DEVELOPMENT
-  PROJECT
-  CAREER
-  ORGANIZATIONAL
-}
-
-// Prioridade de Metas
-enum GoalPriority {
-  LOW
-  MEDIUM
-  HIGH
-  CRITICAL
-}
-
-// Status de Metas
-enum GoalStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  ON_TRACK
-  AT_RISK
-  COMPLETED
-  CANCELLED
-}
-
-// Tipos de Competência
-enum CompetencyType {
-  TECHNICAL
-  BEHAVIORAL
-  LEADERSHIP
-  DOMAIN
-  CORE
-}
-
-// Níveis de Competência
-enum CompetencyLevel {
-  FOUNDATIONAL
-  INTERMEDIATE
-  ADVANCED
-  EXPERT
-}
-
-// Tipos de Revisão de Desempenho
-enum ReviewType {
-  QUARTERLY
-  SEMI_ANNUAL
-  ANNUAL
-  PROJECT_BASED
-  PROBATION
-}
-
-// Status de Revisão de Desempenho
-enum ReviewStatus {
-  DRAFT
-  IN_PROGRESS
-  PENDING_EMPLOYEE
-  PENDING_MANAGER
-  COMPLETED
-}
-
-// Formato de Sessão
-enum SessionFormat {
-  IN_PERSON
-  VIRTUAL
-  HYBRID
-}
-
-// Fonte de Recomendação
 enum RecommendationSource {
   AI
   PERFORMANCE
@@ -99,103 +47,26 @@ enum RecommendationSource {
   MANAGER
 }
 
-// Status de Projeto
+enum RecommendationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum RecommendationStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  DISMISSED
+}
+
 enum ProjectStatus {
   PLANNING
   IN_PROGRESS
   COMPLETED
   ON_HOLD
   CANCELLED
-}
-
-// Status de Touchpoint de Jornada
-enum TouchpointType {
-  ONBOARDING
-  PERFORMANCE_REVIEW
-  TRAINING
-  FEEDBACK_SESSION
-  EXIT_INTERVIEW
-  OTHER
-}
-
-// Sentimento de Feedback
-enum SentimentType {
-  POSITIVE
-  NEUTRAL
-  NEGATIVE
-}
-
-// Tipos de Métricas de Performance
-enum PerformanceMetricStatus {
-  ON_TRACK
-  BEHIND
-  EXCEEDED
-  NOT_MEASURED
-}
-
-// Status de Metas de Performance
-enum PerformanceGoalStatus {
-  DRAFT
-  IN_PROGRESS
-  COMPLETED
-  NOT_ACHIEVED
-}
-
-// Status de Plano de Desenvolvimento
-enum DevelopmentPlanStatus {
-  DRAFT
-  IN_PROGRESS
-  COMPLETED
-  ABANDONED
-}
-
-// Status de Item de Desenvolvimento
-enum DevelopmentItemStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-  BLOCKED
-}
-
-// Status de Relacionamento de Mentoria
-enum MentoringStatus {
-  ACTIVE
-  COMPLETED
-  PAUSED
-}
-
-// Tipo de Desenvolvimento
-enum DevelopmentType {
-  TRAINING
-  CERTIFICATION
-  PROJECT
-}
-
-// Ações de Auditoria
-enum AuditAction {
-  CREATE
-  UPDATE
-  DELETE
-  VIEW
-  LOGIN
-  LOGOUT
-}
-
-// Categorias de Tags
-enum TagCategory {
-  SKILL
-  PROJECT
-  DEPARTMENT
-  COMPETENCY
-  PERSONAL
-}
-
-// Enums para novas funcionalidades
-enum SalaryBand {
-  JUNIOR
-  MID_LEVEL
-  SENIOR
-  EXECUTIVE
 }
 
 enum TrainingType {
@@ -206,13 +77,6 @@ enum TrainingType {
   EXTERNAL_COURSE
 }
 
-enum TrainingDifficulty {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-  EXPERT
-}
-
 enum TrainingStatus {
   ENROLLED
   IN_PROGRESS
@@ -220,691 +84,708 @@ enum TrainingStatus {
   DROPPED
 }
 
-enum AssessmentStatus {
-  UPCOMING
+enum PerformanceReviewStatus {
+  DRAFT
+  IN_PROGRESS
+  PENDING_EMPLOYEE
+  PENDING_MANAGER
+  COMPLETED
+}
+
+enum GoalType {
+  PERFORMANCE
+  DEVELOPMENT
+  PROJECT
+  CAREER
+  ORGANIZATIONAL
+}
+
+enum GoalPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ON_TRACK
+  AT_RISK
+  COMPLETED
+  CANCELLED
+}
+
+enum DevelopmentPlanStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum DevelopmentItemStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum OffboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EmployeeJourneyStatus {
+  PLANNED
   ACTIVE
   COMPLETED
-  CLOSED
+  CANCELLED
+}
+
+enum MentoringStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  LOGIN
+  LOGOUT
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+  SLACK
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  READ
 }
 
 enum KnowledgeCategory {
-  BEST_PRACTICE
+  POLICY
   PROCESS
-  TECHNOLOGY
-  SOFT_SKILLS
-  DOMAIN_SPECIFIC
+  TRAINING
+  FAQ
+  OTHER
 }
 
-// Categorias de Habilidades
-enum SkillCategory {
-  TECHNICAL
-  SOFT
-  LEADERSHIP
-  DOMAIN
-  CORE
+enum AssessmentPeriodStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
 }
 
-// Níveis de Habilidade
-enum SkillLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-  EXPERT
+enum CompetencyAssessmentStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
 
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model Employee {
-  id            String         @id @default(uuid())
-  name          String
-  email         String         @unique
-  phone         String?
-  hireDate      DateTime
-  department    Department     @relation(fields: [departmentId], references: [id])
-  departmentId  String
-  position      Position       @relation(fields: [positionId], references: [id])
-  positionId    String
-  skills        Skill[]
-  projects      Project[]
-  trainings     Training[]
-  performances  Performance[]
-  mentorings    Mentoring[]    @relation("Mentor")
-  menteeings    Mentoring[]    @relation("Mentee")
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+enum AdminRole {
+  SUPER_ADMIN
+  ORG_ADMIN
+  HR_ADMIN
 }
 
 model Department {
   id          String     @id @default(uuid())
-  name        String
+  name        String     @unique
   description String?
+  positions   Position[]
   employees   Employee[]
+  journeys    EmployeeJourney[]
+  knowledgeArticles KnowledgeArticle[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
 
 model Position {
-  id          String     @id @default(uuid())
-  title       String
-  description String?
-  level       String
-  employees   Employee[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id           String      @id @default(uuid())
+  title        String
+  description  String?
+  level        String?
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id])
+  employees    Employee[]
+  careerPaths  CareerPathPosition[]
+  journeys     EmployeeJourney[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([departmentId, title])
 }
 
 model Skill {
-  id          String     @id @default(uuid())
-  name        String
-  description String?
-  category    String
-  level       String
-  employees   Employee[]
-  projects    Project[]
-  trainings   Training[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                  String                @id @default(uuid())
+  name                String                @unique
+  description         String?
+  type                SkillType
+  category            SkillCategory
+  defaultLevel        SkillLevel            @default(BEGINNER)
+  employeeLinks       EmployeeSkill[]
+  projectLinks        ProjectSkill[]
+  trainingLinks       TrainingSkill[]
+  recommendationLinks RecommendationSkill[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  DevelopmentPlanItem DevelopmentPlanItem[]
+  careerPaths         CareerPathSkill[]
+  knowledgeArticles   KnowledgeArticleSkill[]
+  competencyAssessments CompetencySkillAssessment[]
+  skillProgress       SkillProgressEntry[]
+}
+
+model Employee {
+  id                 String                   @id @default(uuid())
+  name               String
+  email              String                   @unique
+  phone              String?
+  hireDate           DateTime
+  departmentId       String
+  positionId         String
+  managerId          String?
+  status             String?
+  department         Department               @relation(fields: [departmentId], references: [id])
+  position           Position                 @relation(fields: [positionId], references: [id])
+  manager            Employee?                @relation("EmployeeManager", fields: [managerId], references: [id])
+  reports            Employee[]               @relation("EmployeeManager")
+  skills             EmployeeSkill[]
+  projects           EmployeeProject[]
+  trainings          EmployeeTraining[]
+  performanceReviews PerformanceReview[]      @relation("ReviewEmployee")
+  reviewsAuthored    PerformanceReview[]      @relation("ReviewReviewer")
+  goals              Goal[]
+  feedbackGiven      Feedback[]               @relation("FeedbackAuthor")
+  feedbackReceived   Feedback[]               @relation("FeedbackRecipient")
+  mentoringAsMentor  MentoringRelationship[]  @relation("Mentor")
+  mentoringAsMentee  MentoringRelationship[]  @relation("Mentee")
+  notifications      Notification[]
+  notificationPrefs  NotificationPreference[]
+  recommendations    Recommendation[]
+  developmentPlans   DevelopmentPlan[]
+  auditLogs          AuditLog[]
+  onboardingWorkflows Onboarding[]
+  offboardingWorkflows Offboarding[]
+  journeys           EmployeeJourney[]
+  knowledgeArticles  KnowledgeArticle[]
+  competencyAssessments CompetencyAssessment[] @relation("AssessmentEmployee")
+  competencyReviews   CompetencyAssessment[] @relation("AssessmentReviewer")
+  skillProgress       SkillProgressEntry[]
+  adminProfile        Admin?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  Project            Project[]
+}
+
+model EmployeeSkill {
+  employeeId    String
+  skillId       String
+  proficiency   SkillLevel @default(BEGINNER)
+  lastEvaluated DateTime?  @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  skill    Skill    @relation(fields: [skillId], references: [id])
+
+  @@id([employeeId, skillId])
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  startDate   DateTime
-  endDate     DateTime?
-  status      ProjectStatus
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String            @id @default(uuid())
+  name           String
+  description    String?
+  startDate      DateTime
+  endDate        DateTime?
+  status         ProjectStatus
+  budget         Float?
+  ownerId        String?
+  owner          Employee?         @relation(fields: [ownerId], references: [id])
+  team           EmployeeProject[]
+  requiredSkills ProjectSkill[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
 
-  employees   EmployeeProject[]
-  skills      Skill[]
+model EmployeeProject {
+  id         String    @id @default(uuid())
+  employeeId String
+  projectId  String
+  role       String
+  startDate  DateTime
+  endDate    DateTime?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  project  Project  @relation(fields: [projectId], references: [id])
+
+  @@unique([employeeId, projectId])
+}
+
+model ProjectSkill {
+  projectId String
+  skillId   String
+
+  project Project @relation(fields: [projectId], references: [id])
+  skill   Skill   @relation(fields: [skillId], references: [id])
+
+  @@id([projectId, skillId])
 }
 
 model Training {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  startDate   DateTime
-  endDate     DateTime?
-  type        TrainingType
+  id           String             @id @default(uuid())
+  name         String
+  description  String?
+  provider     String?
+  type         TrainingType
+  status       TrainingStatus
+  startDate    DateTime
+  endDate      DateTime?
+  difficulty   String?
+  skills       TrainingSkill[]
+  participants EmployeeTraining[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model TrainingSkill {
+  trainingId String
+  skillId    String
+
+  training Training @relation(fields: [trainingId], references: [id])
+  skill    Skill    @relation(fields: [skillId], references: [id])
+
+  @@id([trainingId, skillId])
+}
+
+model EmployeeTraining {
+  id          String         @id @default(uuid())
+  employeeId  String
+  trainingId  String
   status      TrainingStatus
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  startedAt   DateTime
+  completedAt DateTime?
 
-  employees   EmployeeTraining[]
-  skills      Skill[]
+  employee Employee @relation(fields: [employeeId], references: [id])
+  training Training @relation(fields: [trainingId], references: [id])
+
+  @@unique([employeeId, trainingId])
 }
 
-model Performance {
-  id                    String   @id @default(uuid())
-  employee              Employee @relation(fields: [employeeId], references: [id])
-  employeeId            String
-  date                  DateTime
-  rating                Int
-  comments              String?
-  goals                 String[]
-  achievements          String[]
-  areasForImprovement   String[]
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+model Feedback {
+  id          String        @id @default(uuid())
+  authorId    String
+  recipientId String
+  type        FeedbackType
+  sentiment   SentimentType
+  title       String
+  content     String
+  rating      Int?
+  tags        String[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  author    Employee @relation("FeedbackAuthor", fields: [authorId], references: [id])
+  recipient Employee @relation("FeedbackRecipient", fields: [recipientId], references: [id])
 }
 
-model Mentoring {
-  id          String   @id @default(uuid())
-  mentor      Employee @relation("Mentor", fields: [mentorId], references: [id])
-  mentorId    String
-  mentee      Employee @relation("Mentee", fields: [menteeId], references: [id])
-  menteeId    String
+model Recommendation {
+  id          String                 @id @default(uuid())
+  employeeId  String
+  title       String
+  description String?
+  source      RecommendationSource
+  priority    RecommendationPriority
+  status      RecommendationStatus
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  employee Employee              @relation(fields: [employeeId], references: [id])
+  skills   RecommendationSkill[]
+}
+
+model RecommendationSkill {
+  recommendationId String
+  skillId          String
+
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id])
+  skill          Skill          @relation(fields: [skillId], references: [id])
+
+  @@id([recommendationId, skillId])
+}
+
+model PerformanceReview {
+  id            String                  @id @default(uuid())
+  employeeId    String
+  reviewerId    String
+  periodStart   DateTime
+  periodEnd     DateTime
+  status        PerformanceReviewStatus
+  overallRating Float?
+  strengths     String[]
+  improvements  String[]
+  comments      String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  employee Employee @relation("ReviewEmployee", fields: [employeeId], references: [id])
+  reviewer Employee @relation("ReviewReviewer", fields: [reviewerId], references: [id])
+}
+
+model Goal {
+  id          String       @id @default(uuid())
+  employeeId  String
+  title       String
+  description String?
+  type        GoalType
+  priority    GoalPriority
+  status      GoalStatus
   startDate   DateTime
-  endDate     DateTime?
-  status      String
-  goals       String[]
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  targetDate  DateTime
+  progress    Float        @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
 }
 
-// Employees table
-model Employees {
-  id                              Int                               @id @default(autoincrement())
-  name                            String
-  email                           String                            @unique
-  password                        String
-  departmentId                   Int
-  positionId                     Int
-  department                      Departments                       @relation(fields: [departmentId], references: [id])
-  position                        Positions                         @relation(fields: [positionId], references: [id])
-  skillsAssessments              SkillsAssessment[]
-  evaluatorAssessments           SkillsAssessment[]              @relation("EvaluatorAssessments")
-  careerAspirations              EmployeeCareerAspiration[]
-  developmentProgress            EmployeeDevelopmentProgress[]
-  feedbacks                      EmployeeFeedback[]
-  notifications                  Notification[]
-  chatbotInteractions           ChatbotInteraction[]
-  employeePerformanceEvaluation EmployeePerformanceEvaluation[]
-  employeeMetrics               EmployeeMetrics?
-  skillsAssessmentEvaluations   SkillsAssessmentEvaluator[]    @relation("EvaluatorEmployee")
-  performanceEvaluationReviews  PerformanceEvaluationEvaluator[] @relation("PerformanceEvaluatorEmployee")
-  employeeProjects              EmployeeProject[]
-  mentoringRelationshipsAsMentor MentoringRelationship[] @relation("Mentor")
-  mentoringRelationshipsAsMentee MentoringRelationship[] @relation("Mentee")
-  skillRecommendations          SkillRecommendation[]
-  developmentPlans              DevelopmentPlan[]
-  performanceGoals              PerformanceGoal[]
-  auditLogs                     AuditLog[]
-  employeeTrainings             EmployeeTraining[]
-  employeeAssessments           CompetencyAssessment[] @relation("EmployeeAssessments")
-  assessorAssessments           CompetencyAssessment[] @relation("AssessorAssessments")
-  knowledgeBaseArticles         KnowledgeBase[]
-  performanceInsights           PerformanceInsight[]
-
-  @@map("employees")
-}
-
-// Departments table
-model Departments {
-  id                  Int                           @id @default(autoincrement())
-  name                String                        @unique
-  employees           Employees[]
-  positions           Positions[]
-  experienceJourneys EmployeeExperienceJourney[] // Counterpart for relation with Employee_Experience_Journey
-
-  @@map("departments")
-}
-
-// Positions table
-model Positions {
-  id                Int                @id @default(autoincrement())
-  name              String
-  description       String?
-  departmentId      Int
-  department        Departments        @relation(fields: [departmentId], references: [id])
-  employees         Employees[]
-  careerPositions   CareerPosition[]   @relation("PositionToCareerPosition")
-}
-
-// Available Skills Inventory
-model SkillsInventory {
-  id                 Int                  @id @default(autoincrement())
-  name               String               @unique
-  type               SkillType
-  description        String
-  category           String
-  skillsAssessments SkillsAssessment[]
-  developmentItems  DevelopmentItem[]
-  skillRecommendations SkillRecommendation[]
-  developmentPlanItems DevelopmentPlanItem[]
-
-  @@map("skills_inventory")
-}
-
-// Employee skills assessments
-model SkillsAssessment {
-  id                Int                            @id @default(autoincrement())
-  employeeId       Int
-  skillId          Int
-  proficiencyLevel Int
-  assessmentDate   DateTime                       @default(now())
-  employee          Employees                      @relation(fields: [employeeId], references: [id])
-  skill             SkillsInventory               @relation(fields: [skillId], references: [id])
-  evaluators        SkillsAssessmentEvaluator[]
-  evaluatorAssessments Employees[]                @relation("EvaluatorAssessments") // Field added to complete relation
-
-  @@unique([employeeId, skillId, assessmentDate])
-  
-  @@map("skills_assessments")
-}
-
-// New table to handle multiple evaluators in skills assessments
-model SkillsAssessmentEvaluator {
-  id                   Int                @id @default(autoincrement())
-  skillsAssessmentId Int
-  evaluatorId         Int
-  skillsAssessment    SkillsAssessment @relation(fields: [skillsAssessmentId], references: [id])
-  evaluator            Employees          @relation("EvaluatorEmployee", fields: [evaluatorId], references: [id])
-
-  @@unique([skillsAssessmentId, evaluatorId])
-}
-
-// Career positions within departments
-model CareerPosition {
-  id                Int      @id @default(autoincrement())
-  title             String
-  description       String?
-  department        String
-  level             Int
-  requirements      Json
-  positionId        Int
-  position          Positions @relation("PositionToCareerPosition", fields: [positionId], references: [id])
-  careerPathwaysFrom  CareerPathway[] @relation("FromPosition")
-  careerPathwaysTo    CareerPathway[] @relation("ToPosition")
-  aspirations         EmployeeCareerAspiration[]
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-}
-
-// Career pathways between positions
-model CareerPathway {
-  id              Int      @id @default(autoincrement())
-  name            String
-  description     String?
-  fromPositionId  Int
-  toPositionId    Int
-  fromPosition    CareerPosition @relation("FromPosition", fields: [fromPositionId], references: [id])
-  toPosition      CareerPosition @relation("ToPosition", fields: [toPositionId], references: [id])
-  requiredSkills  SkillProfile[] @relation("CareerPathwaySkills")
-  careerStages    CareerStage[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@unique([fromPositionId, toPositionId])
-}
-
-// Employee career aspirations
-model EmployeeCareerAspiration {
-  id                     Int              @id @default(autoincrement())
-  employeeId            Int
-  aspirationPositionId Int
-  creationDate          DateTime         @default(now())
-  updateDate            DateTime         @updatedAt
-  employee               Employees        @relation(fields: [employeeId], references: [id])
-  aspirationPosition    CareerPosition @relation(fields: [aspirationPositionId], references: [id])
-
-  @@unique([employeeId, aspirationPositionId])
-  
-  @@map("employee_career_aspirations")
-}
-
-// Employee experience journey
-model EmployeeExperienceJourney {
-  id            Int                   @id @default(autoincrement())
-  name          String                @unique
-  description   String
-  departmentId Int
-  department    Departments           @relation(fields: [departmentId], references: [id])
-  touchpoints   JourneyTouchpoint[]
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
-}
-
-// Touchpoints along the experience journey
-model JourneyTouchpoint {
-  id                 Int                         @id @default(autoincrement())
-  journeyId         Int
-  name               String
-  description        String
-  type               TouchpointType
-  order              Int
-  experienceJourney EmployeeExperienceJourney @relation(fields: [journeyId], references: [id])
-  employeeFeedbacks EmployeeFeedback[]
-
-  @@unique([journeyId, order])
-}
-
-// Feedback provided by employees on touchpoints
-model EmployeeFeedback {
-  id            Int                 @id @default(autoincrement())
-  employeeId   Int
-  touchpointId Int
-  comment       String
-  sentiment     SentimentType
-  feedbackDate DateTime            @default(now())
-  employee      Employees           @relation(fields: [employeeId], references: [id])
-  touchpoint    JourneyTouchpoint @relation(fields: [touchpointId], references: [id])
-}
-
-// Notifications sent to employees
-model Notification {
-  id            Int       @id @default(autoincrement())
-  employeeId   Int
-  title         String
-  message       String
-  read          Boolean   @default(false)
-  creationDate DateTime  @default(now())
-  employee      Employees @relation(fields: [employeeId], references: [id])
-}
-
-// Development items, such as courses and training
-model DevelopmentItem {
-  id                Int                             @id @default(autoincrement())
-  name              String
-  description       String
-  type              DevelopmentType
-  skillId          Int
-  link              String
-  skill             SkillsInventory                @relation(fields: [skillId], references: [id])
-  employeeProgress EmployeeDevelopmentProgress[]
-}
-
-// Individual development progress of employees
-model EmployeeDevelopmentProgress {
-  id                  Int               @id @default(autoincrement())
-  employeeId         Int
-  developmentItemId Int
-  completionDate     DateTime          @default(now())
-  employee           Employees         @relation(fields: [employeeId], references: [id])
-  developmentItem    DevelopmentItem @relation(fields: [developmentItemId], references: [id])
-
-  @@unique([employeeId, developmentItemId])
-}
-
-// Record of chatbot interactions for support
-model ChatbotInteraction {
-  id               Int       @id @default(autoincrement())
-  employeeId      Int
-  userMessage     String
-  chatbotResponse String
-  interactionDate DateTime  @default(now())
-  employee         Employees @relation(fields: [employeeId], references: [id])
-}
-
-// General performance evaluations for employees
-model EmployeePerformanceEvaluation {
-  id                Int                                 @id @default(autoincrement())
-  employeeId       Int
-  evaluationDate   DateTime                            @default(now())
-  overallScore     Float
-  strengths         String // Areas where the employee performed well
-  improvementAreas String // Areas identified for improvement
-  comments          String // General comments on performance
-  employee          Employees                           @relation(fields: [employeeId], references: [id])
-  evaluators        PerformanceEvaluationEvaluator[]
-}
-
-// New table to handle multiple evaluators in performance evaluations
-model PerformanceEvaluationEvaluator {
-  id                        Int                             @id @default(autoincrement())
-  performanceEvaluationId Int
-  evaluatorId              Int
-  performanceEvaluation    EmployeePerformanceEvaluation @relation(fields: [performanceEvaluationId], references: [id])
-  evaluator                 Employees                       @relation("PerformanceEvaluatorEmployee", fields: [evaluatorId], references: [id])
-
-  @@unique([performanceEvaluationId, evaluatorId])
-  
-  @@map("performance_evaluation_evaluators")
-}
-
-// Aggregated development and evaluation metrics for employees
-model EmployeeMetrics {
-  id                          Int       @id @default(autoincrement())
-  employeeId                 Int
-  averageProficiencyLevel   Float // Average proficiency level across skills
-  totalPositiveFeedbacks    Int // Total count of positive feedbacks
-  totalNeutralFeedbacks     Int // Total count of neutral feedbacks
-  totalNegativeFeedbacks    Int // Total count of negative feedbacks
-  completedDevelopmentItems Int // Number of completed development items
-  lastUpdated                DateTime  @default(now()) @updatedAt
-  employee                    Employees @relation(fields: [employeeId], references: [id])
-
-  @@unique([employeeId])
-}
-
-// Employee-Project relationship
-model EmployeeProject {
-  id            Int       @id @default(autoincrement())
-  employeeId    Int
-  projectId     Int
-  role          String
-  startDate     DateTime
-  endDate       DateTime?
-  employee      Employees @relation(fields: [employeeId], references: [id])
-  project       Project   @relation(fields: [projectId], references: [id])
-
-  @@unique([employeeId, projectId])
-  @@map("employee_projects")
-}
-
-// Mentoring model
-model MentoringRelationship {
-  id                Int       @id @default(autoincrement())
-  mentorId         Int
-  menteeId         Int
-  startDate        DateTime
-  endDate          DateTime?
-  status           MentoringStatus
-  goals            String?
-  mentor           Employees @relation("Mentor", fields: [mentorId], references: [id])
-  mentee           Employees @relation("Mentee", fields: [menteeId], references: [id])
-
-  @@unique([mentorId, menteeId])
-  @@map("mentoring_relationships")
-}
-
-// Recommendations model
-model SkillRecommendation {
-  id                Int       @id @default(autoincrement())
-  employeeId       Int
-  recommendedSkillId Int
-  confidence       Float
-  source           RecommendationSource
-  employee         Employees @relation(fields: [employeeId], references: [id])
-  skill            SkillsInventory @relation(fields: [recommendedSkillId], references: [id])
-
-  @@map("skill_recommendations")
-}
-
-// Development model
 model DevelopmentPlan {
-  id                Int       @id @default(autoincrement())
-  employeeId       Int
-  title            String
-  description      String?
-  startDate        DateTime
-  targetDate       DateTime
-  status           DevelopmentPlanStatus
-  employee         Employees @relation(fields: [employeeId], references: [id])
-  developmentItems DevelopmentPlanItem[]
+  id          String                @id @default(uuid())
+  employeeId  String
+  title       String
+  description String?
+  status      DevelopmentPlanStatus
+  startDate   DateTime
+  targetDate  DateTime
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
 
-  @@map("development_plans")
+  employee Employee              @relation(fields: [employeeId], references: [id])
+  items    DevelopmentPlanItem[]
 }
 
 model DevelopmentPlanItem {
-  id                  Int       @id @default(autoincrement())
-  developmentPlanId   Int
-  skillId             Int
-  targetProficiency  Int
-  status             DevelopmentItemStatus
-  developmentPlan    DevelopmentPlan @relation(fields: [developmentPlanId], references: [id])
-  skill              SkillsInventory @relation(fields: [skillId], references: [id])
+  id                String                @id @default(uuid())
+  developmentPlanId String
+  title             String
+  description       String?
+  status            DevelopmentItemStatus
+  skillId           String?
+  dueDate           DateTime?
+  completedAt       DateTime?
 
-  @@map("development_plan_items")
+  plan  DevelopmentPlan @relation(fields: [developmentPlanId], references: [id])
+  skill Skill?          @relation(fields: [skillId], references: [id])
 }
 
-// Performance model
-model PerformanceGoal {
-  id                Int       @id @default(autoincrement())
-  employeeId       Int
+model MentoringRelationship {
+  id        String          @id @default(uuid())
+  mentorId  String
+  menteeId  String
+  status    MentoringStatus
+  startDate DateTime
+  endDate   DateTime?
+  goals     String[]
+  notes     String?
+
+  mentor Employee @relation("Mentor", fields: [mentorId], references: [id])
+  mentee Employee @relation("Mentee", fields: [menteeId], references: [id])
+
+  @@unique([mentorId, menteeId])
+}
+
+model Notification {
+  id         String              @id @default(uuid())
+  employeeId String
+  channel    NotificationChannel
+  status     NotificationStatus
+  title      String
+  message    String
+  metadata   Json?
+  sentAt     DateTime?
+  readAt     DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model NotificationPreference {
+  id         String              @id @default(uuid())
+  employeeId String
+  channel    NotificationChannel
+  enabled    Boolean             @default(true)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, channel])
+}
+
+model Onboarding {
+  id          String           @id @default(uuid())
+  employeeId  String
+  status      OnboardingStatus
+  startDate   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  employee Employee        @relation(fields: [employeeId], references: [id])
+  tasks    OnboardingTask[]
+}
+
+model OnboardingTask {
+  id           String     @id @default(uuid())
+  onboardingId String
+  title        String
+  description  String?
+  dueDate      DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  onboarding Onboarding @relation(fields: [onboardingId], references: [id])
+
+  @@index([onboardingId])
+}
+
+model Offboarding {
+  id          String            @id @default(uuid())
+  employeeId  String
+  status      OffboardingStatus
+  exitDate    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  employee Employee         @relation(fields: [employeeId], references: [id])
+  tasks    OffboardingTask[]
+}
+
+model OffboardingTask {
+  id            String     @id @default(uuid())
+  offboardingId String
+  title         String
+  description   String?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  offboarding Offboarding @relation(fields: [offboardingId], references: [id])
+
+  @@index([offboardingId])
+}
+
+model EmployeeJourney {
+  id            String                @id @default(uuid())
+  employeeId    String
+  departmentId  String?
+  positionId    String?
+  type          String
+  description   String?
+  status        EmployeeJourneyStatus
+  startDate     DateTime
+  endDate       DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  position   Position?   @relation(fields: [positionId], references: [id])
+  touchpoints EmployeeJourneyTouchpoint[]
+
+  @@index([employeeId])
+  @@index([departmentId])
+  @@index([positionId])
+}
+
+model EmployeeJourneyTouchpoint {
+  id               String          @id @default(uuid())
+  journeyId        String
   title            String
   description      String?
-  startDate        DateTime
-  targetDate       DateTime
-  status           PerformanceGoalStatus
-  weight           Float     @default(1.0)
-  employee         Employees @relation(fields: [employeeId], references: [id])
-  metrics          PerformanceMetric[]
+  occurredAt       DateTime
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  @@map("performance_goals")
+  journey EmployeeJourney @relation(fields: [journeyId], references: [id])
+
+  @@index([journeyId])
 }
 
-model PerformanceMetric {
-  id                  Int       @id @default(autoincrement())
-  performanceGoalId   Int
-  name                String
-  targetValue         Float
-  actualValue         Float?
-  status              PerformanceMetricStatus
-  performanceGoal     PerformanceGoal @relation(fields: [performanceGoalId], references: [id])
+model CareerPath {
+  id          String              @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
 
-  @@map("performance_metrics")
+  stages        CareerPathStage[]
+  positionLinks CareerPathPosition[]
+  skillLinks    CareerPathSkill[]
 }
 
-// Modelos de Auditoria e Rastreabilidade
+model CareerPathStage {
+  id           String     @id @default(uuid())
+  careerPathId String
+  title        String
+  description  String?
+  order        Int
+
+  careerPath CareerPath @relation(fields: [careerPathId], references: [id])
+
+  @@index([careerPathId])
+}
+
+model CareerPathPosition {
+  careerPathId String
+  positionId   String
+
+  careerPath CareerPath @relation(fields: [careerPathId], references: [id])
+  position   Position   @relation(fields: [positionId], references: [id])
+
+  @@id([careerPathId, positionId])
+}
+
+model CareerPathSkill {
+  careerPathId String
+  skillId      String
+
+  careerPath CareerPath @relation(fields: [careerPathId], references: [id])
+  skill      Skill      @relation(fields: [skillId], references: [id])
+
+  @@id([careerPathId, skillId])
+}
+
 model AuditLog {
-  id            Int       @id @default(autoincrement())
-  userId        Int
-  action        AuditAction
-  entityType    String
-  entityId      Int
-  oldValue      Json?
-  newValue      Json?
-  timestamp     DateTime  @default(now())
-  user          Employees @relation(fields: [userId], references: [id])
+  id        String      @id @default(uuid())
+  userId    String
+  action    AuditAction
+  entity    String
+  entityId  String
+  oldValue  Json?
+  newValue  Json?
+  createdAt DateTime    @default(now())
 
-  @@map("audit_logs")
+  user Employee @relation(fields: [userId], references: [id])
 }
 
-// Modelos de Tags e Categorização
-model Tag {
-  id            Int       @id @default(autoincrement())
-  name          String    @unique
-  color         String?
-  description   String?
-  category      TagCategory
-  entityTags    EntityTag[]
+model KnowledgeArticle {
+  id          String            @id @default(uuid())
+  authorId    String
+  departmentId String?
+  title       String
+  content     String
+  category    KnowledgeCategory
+  tags        String[]
+  publishedAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 
-  @@map("tags")
+  author     Employee  @relation(fields: [authorId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  skillLinks KnowledgeArticleSkill[]
 }
 
-model EntityTag {
-  id            Int       @id @default(autoincrement())
-  entityId      Int
-  entityType    String
-  tagId         Int
-  tag           Tag       @relation(fields: [tagId], references: [id])
+model KnowledgeArticleSkill {
+  articleId String
+  skillId   String
 
-  @@unique([entityId, entityType, tagId])
-  @@map("entity_tags")
-}
+  article KnowledgeArticle @relation(fields: [articleId], references: [id])
+  skill   Skill            @relation(fields: [skillId], references: [id])
 
-// Modelos de Desenvolvimento Profissional
-model CareerStage {
-  id                  Int      @id @default(autoincrement())
-  name                String
-  description         String?
-  level               Int
-  minimumYearsExp     Int
-  recommendedTrainings Training[] @relation("CareerStageTrainings")
-  careerPathwayId     Int
-  careerPathway       CareerPathway @relation(fields: [careerPathwayId], references: [id])
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-}
-
-model JobRole {
-  id              Int      @id @default(autoincrement())
-  name            String
-  description     String?
-  salaryBand      SalaryBand
-  requiredSkills  SkillProfile[] @relation("JobRoleSkills")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-// Modelos de Treinamento
-model EmployeeTraining {
-  id          Int      @id @default(autoincrement())
-  employeeId  Int
-  employee    Employees @relation(fields: [employeeId], references: [id])
-  trainingId  Int
-  training    Training @relation(fields: [trainingId], references: [id])
-  status      TrainingStatus
-  startDate   DateTime
-  endDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-// Modelos de Avaliação 360 Graus
-model CompetencyAssessment {
-  id              Int      @id @default(autoincrement())
-  employeeId      Int
-  employee        Employees @relation("EmployeeAssessments", fields: [employeeId], references: [id])
-  assessorId      Int
-  assessor        Employees @relation("AssessorAssessments", fields: [assessorId], references: [id])
-  competencyId    Int
-  competency      CompetencyProfile @relation(fields: [competencyId], references: [id])
-  level           CompetencyLevel
-  assessmentDate  DateTime
-  assessmentPeriodId Int
-  assessmentPeriod AssessmentPeriod @relation(fields: [assessmentPeriodId], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  @@id([articleId, skillId])
 }
 
 model AssessmentPeriod {
-  id                  Int      @id @default(autoincrement())
-  name                String
-  startDate           DateTime
-  endDate             DateTime
-  status              AssessmentStatus
-  competencyAssessments CompetencyAssessment[]
-  
-  @@map("assessment_periods")
+  id        String                  @id @default(uuid())
+  name      String
+  status    AssessmentPeriodStatus  @default(DRAFT)
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  assessments CompetencyAssessment[]
 }
 
-// Modelos de Gestão de Conhecimento
-model KnowledgeBase {
-  id                  Int      @id @default(autoincrement())
-  title               String
-  content             String
-  category            KnowledgeCategory
-  tags                String[]
-  authorId            Int
-  author              Employees @relation(fields: [authorId], references: [id])
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
-  @@map("knowledge_base")
+model CompetencyAssessment {
+  id          String                     @id @default(uuid())
+  periodId    String
+  employeeId  String
+  reviewerId  String?
+  status      CompetencyAssessmentStatus @default(PLANNED)
+  overallScore Float?
+  comments    String?
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+
+  period   AssessmentPeriod @relation(fields: [periodId], references: [id])
+  employee Employee          @relation("AssessmentEmployee", fields: [employeeId], references: [id])
+  reviewer Employee?         @relation("AssessmentReviewer", fields: [reviewerId], references: [id])
+  skillRatings CompetencySkillAssessment[]
+
+  @@index([periodId])
+  @@index([employeeId])
 }
 
-// Modelos de Métricas Avançadas de Desempenho
-model PerformanceInsight {
-  id                  Int      @id @default(autoincrement())
-  employeeId          Int
-  employee            Employees @relation(fields: [employeeId], references: [id])
-  period              DateTime
-  productivityScore   Float
-  engagementLevel     Float
-  learningAgility     Float
-  collaborationIndex  Float
-  potentialScore      Float
-  
-  @@map("performance_insights")
+model CompetencySkillAssessment {
+  id            String   @id @default(uuid())
+  assessmentId  String
+  skillId       String
+  rating        Int
+  comments      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  assessment CompetencyAssessment @relation(fields: [assessmentId], references: [id])
+  skill      Skill                @relation(fields: [skillId], references: [id])
+
+  @@index([assessmentId])
+  @@index([skillId])
 }
 
-// Modelo SkillProfile
-model SkillProfile {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  type        SkillType
-  level       CompetencyLevel
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model SkillProgressEntry {
+  id          String     @id @default(uuid())
+  employeeId  String
+  skillId     String
+  proficiency SkillLevel
+  evidence    String?
+  createdAt   DateTime   @default(now())
 
-  // Relacionamentos
-  careerPathways CareerPathway[] @relation("CareerPathwaySkills")
-  jobRoles       JobRole[]       @relation("JobRoleSkills")
-  trainings      Training[]      @relation("TrainingSkills")
+  employee Employee @relation(fields: [employeeId], references: [id])
+  skill    Skill    @relation(fields: [skillId], references: [id])
+
+  @@index([employeeId])
+  @@index([skillId])
 }
 
-// Modelo CompetencyProfile
-model CompetencyProfile {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  type        CompetencyType
-  level       CompetencyLevel
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model Admin {
+  id         String    @id @default(uuid())
+  employeeId String    @unique
+  role       AdminRole
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  // Relacionamentos
-  competencyAssessments CompetencyAssessment[]
+  employee Employee @relation(fields: [employeeId], references: [id])
 }

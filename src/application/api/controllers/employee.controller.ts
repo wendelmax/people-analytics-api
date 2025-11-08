@@ -13,9 +13,8 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuthDecorator } from '../auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 
-import { EmployeeService } from '../../../domain/employee/services/employee.service';
-import { CreateEmployeeDto } from '?';
-import { UpdateEmployeeDto } from '?';
+import { EmployeeService } from '@core/domain/services/employee.service';
+import { CreateEmployeeDto, UpdateEmployeeDto } from '@application/api/dto/employee.dto';
 
 @ApiTags('employee')
 @Controller('employee')
@@ -46,7 +45,7 @@ export class EmployeeController {
   @ApiResponse({ status: 200, description: 'Employee record details' })
   @ApiResponse({ status: 404, description: 'Employee record not found' })
   findOne(@Param('id') id: string) {
-    return this.employeeService.findOne(id);
+    return this.employeeService.findById(id);
   }
 
   @Patch(':id')
@@ -64,7 +63,7 @@ export class EmployeeController {
   @ApiOperation({ summary: 'Remove an employee record' })
   @ApiResponse({ status: 204, description: 'Employee record removed successfully' })
   @ApiResponse({ status: 404, description: 'Employee record not found' })
-  remove(@Param('id') id: string) {
-    return this.employeeService.remove(id);
+  async remove(@Param('id') id: string) {
+    await this.employeeService.delete(id);
   }
 }

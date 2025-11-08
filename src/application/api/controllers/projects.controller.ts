@@ -1,57 +1,60 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { ProjectsService } from '@core/domain/projects/services/projects.service';
-import { CreateProjectDto, UpdateProjectDto } from '@shared/dto/base.dto';
+import { ProjectService } from '@core/domain/services/project.service';
+import { CreateProjectDto, UpdateProjectDto } from '@application/api/dto/project.dto';
 
 @ApiTags('projects')
 @Controller('projects')
 @ApiBearerAuth()
 export class ProjectsController {
-  constructor(private readonly projectsService: ProjectsService) {}
+  constructor(private readonly projectService: ProjectService) {}
 
   @Post()
   @AuthDecorator(UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Create a new project' })
   @ApiResponse({ status: 201, description: 'Project created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectsService.create(createProjectDto);
+  create(@Body() dto: CreateProjectDto) {
+    return this.projectService.create(dto);
   }
 
   @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all projects' })
-  @ApiResponse({ status: 200, description: 'List of projects' })
+  @ApiOperation({ summary: 'List projects' })
   findAll() {
-    return this.projectsService.findAll();
+    return this.projectService.findAll();
   }
 
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Get project by ID' })
-  @ApiResponse({ status: 200, description: 'Project details' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
   findOne(@Param('id') id: string) {
-    return this.projectsService.findOne(id);
+    return this.projectService.findById(id);
   }
 
   @Patch(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update project details' })
-  @ApiResponse({ status: 200, description: 'Project updated successfully' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(id, updateProjectDto);
+  @ApiOperation({ summary: 'Update project' })
+  update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
+    return this.projectService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a project' })
-  @ApiResponse({ status: 200, description: 'Project removed successfully' })
-  @ApiResponse({ status: 404, description: 'Project not found' })
-  remove(@Param('id') id: string) {
-    return this.projectsService.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete project' })
+  async remove(@Param('id') id: string) {
+    await this.projectService.delete(id);
   }
 }

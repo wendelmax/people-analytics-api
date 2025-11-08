@@ -1,11 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthDecorator } from '../auth/decorator/auth.decorator';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-
-import { FeedbackService } from '../../../domain/feedback/services/feedback.service';
-import { CreateFeedbackDto } from '?';
-import { UpdateFeedbackDto } from '?';
+import { FeedbackService } from '@core/domain/services/feedback.service';
+import { CreateFeedbackDto, UpdateFeedbackDto } from '@application/api/dto/feedback.dto';
 
 @ApiTags('feedback')
 @Controller('feedback')
@@ -14,46 +22,39 @@ export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
   @Post()
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new feedback record' })
-  @ApiResponse({ status: 201, description: 'Feedback record created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createFeedbackDto: CreateFeedbackDto) {
-    return this.feedbackService.create(createFeedbackDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Create feedback' })
+  @ApiResponse({ status: 201, description: 'Feedback created successfully' })
+  create(@Body() dto: CreateFeedbackDto) {
+    return this.feedbackService.create(dto);
   }
 
   @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all feedback records' })
-  @ApiResponse({ status: 200, description: 'List of feedback records' })
+  @ApiOperation({ summary: 'List feedback entries' })
   findAll() {
     return this.feedbackService.findAll();
   }
 
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get feedback record by ID' })
-  @ApiResponse({ status: 200, description: 'Feedback record details' })
-  @ApiResponse({ status: 404, description: 'Feedback record not found' })
+  @ApiOperation({ summary: 'Get feedback by ID' })
   findOne(@Param('id') id: string) {
-    return this.feedbackService.findOne(id);
+    return this.feedbackService.findById(id);
   }
 
   @Patch(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update feedback record details' })
-  @ApiResponse({ status: 200, description: 'Feedback record updated successfully' })
-  @ApiResponse({ status: 404, description: 'Feedback record not found' })
-  update(@Param('id') id: string, @Body() updateFeedbackDto: UpdateFeedbackDto) {
-    return this.feedbackService.update(id, updateFeedbackDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Update feedback' })
+  update(@Param('id') id: string, @Body() dto: UpdateFeedbackDto) {
+    return this.feedbackService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a feedback record' })
-  @ApiResponse({ status: 200, description: 'Feedback record removed successfully' })
-  @ApiResponse({ status: 404, description: 'Feedback record not found' })
-  remove(@Param('id') id: string) {
-    return this.feedbackService.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete feedback entry' })
+  async remove(@Param('id') id: string) {
+    await this.feedbackService.delete(id);
   }
 }

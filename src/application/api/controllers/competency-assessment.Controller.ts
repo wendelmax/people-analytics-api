@@ -1,109 +1,102 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { CompetencyAssessmentService } from '@core/domain/competency-assessment/services/competency-assessment.service';
+import { CompetencyAssessmentService } from '@core/domain/services/competency-assessment.service';
 import {
   CreateAssessmentPeriodDto,
   CreateCompetencyAssessmentDto,
+  UpdateAssessmentPeriodDto,
   UpdateAssessmentPeriodStatusDto,
   UpdateCompetencyAssessmentDto,
-} from '@shared/dto/base.dto';
+} from '@application/api/dto/competency-assessment.dto';
 
-@ApiTags('Competency Assessments')
+@ApiTags('competency-assessments')
 @Controller('competency-assessments')
 @ApiBearerAuth()
 export class CompetencyAssessmentController {
   constructor(private readonly competencyAssessmentService: CompetencyAssessmentService) {}
 
-  @Post('period')
+  @Post('periods')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new assessment period' })
-  createAssessmentPeriod(@Body() createDto: CreateAssessmentPeriodDto) {
-    return this.competencyAssessmentService.createAssessmentPeriod(
-      createDto.name,
-      new Date(createDto.startDate),
-      new Date(createDto.endDate),
-    );
+  @ApiOperation({ summary: 'Create assessment period' })
+  createAssessmentPeriod(@Body() dto: CreateAssessmentPeriodDto) {
+    return this.competencyAssessmentService.createAssessmentPeriod(dto);
   }
 
-  @Post()
+  @Patch('periods/:periodId')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new competency assessment' })
-  @ApiResponse({ status: 201, description: 'Competency assessment created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  createCompetencyAssessment(@Body() createDto: CreateCompetencyAssessmentDto) {
-    return this.competencyAssessmentService.create(createDto);
+  @ApiOperation({ summary: 'Update assessment period' })
+  updateAssessmentPeriod(
+    @Param('periodId') periodId: string,
+    @Body() dto: UpdateAssessmentPeriodDto,
+  ) {
+    return this.competencyAssessmentService.updateAssessmentPeriod(periodId, dto);
+  }
+
+  @Patch('periods/:periodId/status')
+  @AuthDecorator(UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Change assessment period status' })
+  updateAssessmentPeriodStatus(
+    @Param('periodId') periodId: string,
+    @Body() dto: UpdateAssessmentPeriodStatusDto,
+  ) {
+    return this.competencyAssessmentService.updateAssessmentPeriodStatus(periodId, dto);
   }
 
   @Get('periods')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all assessment periods' })
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'List assessment periods' })
   findAllAssessmentPeriods() {
     return this.competencyAssessmentService.findAllAssessmentPeriods();
   }
 
-  @Get('employee/:employeeId')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get competency assessments for an employee' })
-  findCompetencyAssessmentsByEmployee(@Param('employeeId') employeeId: string) {
-    return this.competencyAssessmentService.findCompetencyAssessmentsByEmployee(+employeeId);
-  }
-
-  @Patch('period/:periodId/status')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update assessment period status' })
-  updateAssessmentPeriodStatus(
-    @Param('periodId') periodId: string,
-    @Body() updateDto: UpdateAssessmentPeriodStatusDto,
-  ) {
-    return this.competencyAssessmentService.updateAssessmentPeriodStatus(
-      +periodId,
-      updateDto.status,
-    );
-  }
-
-  @Get('employee/:employeeId/score')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Calculate employee competency score' })
-  calculateEmployeeCompetencyScore(@Param('employeeId') employeeId: string) {
-    return this.competencyAssessmentService.calculateEmployeeCompetencyScore(+employeeId);
+  @Post()
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Create competency assessment' })
+  @ApiResponse({ status: 201, description: 'Competency assessment created successfully' })
+  createCompetencyAssessment(@Body() dto: CreateCompetencyAssessmentDto) {
+    return this.competencyAssessmentService.create(dto);
   }
 
   @Get()
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all competency assessments' })
-  @ApiResponse({ status: 200, description: 'List of competency assessments' })
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'List competency assessments' })
   findAll() {
     return this.competencyAssessmentService.findAll();
   }
 
   @Get(':id')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get competency assessment by ID' })
-  @ApiResponse({ status: 200, description: 'Competency assessment details' })
-  @ApiResponse({ status: 404, description: 'Competency assessment not found' })
   findOne(@Param('id') id: string) {
     return this.competencyAssessmentService.findOne(id);
   }
 
+  @Get('employees/:employeeId')
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'List assessments for an employee' })
+  findCompetencyAssessmentsByEmployee(@Param('employeeId') employeeId: string) {
+    return this.competencyAssessmentService.findCompetencyAssessmentsByEmployee(employeeId);
+  }
+
+  @Get('employees/:employeeId/score')
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Calculate employee competency score' })
+  calculateEmployeeCompetencyScore(@Param('employeeId') employeeId: string) {
+    return this.competencyAssessmentService.calculateEmployeeCompetencyScore(employeeId);
+  }
+
   @Patch(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update competency assessment details' })
-  @ApiResponse({ status: 200, description: 'Competency assessment updated successfully' })
-  @ApiResponse({ status: 404, description: 'Competency assessment not found' })
-  update(
-    @Param('id') id: string,
-    @Body() updateCompetencyAssessmentDto: UpdateCompetencyAssessmentDto,
-  ) {
-    return this.competencyAssessmentService.update(id, updateCompetencyAssessmentDto);
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Update competency assessment' })
+  update(@Param('id') id: string, @Body() dto: UpdateCompetencyAssessmentDto) {
+    return this.competencyAssessmentService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a competency assessment' })
-  @ApiResponse({ status: 200, description: 'Competency assessment removed successfully' })
-  @ApiResponse({ status: 404, description: 'Competency assessment not found' })
+  @ApiOperation({ summary: 'Delete competency assessment' })
   remove(@Param('id') id: string) {
     return this.competencyAssessmentService.remove(id);
   }

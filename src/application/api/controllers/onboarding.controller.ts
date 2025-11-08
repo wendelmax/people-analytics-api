@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthDecorator } from '../auth/decorator/auth.decorator';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-
-import { OnboardingService } from '../../../domain/onboarding/services/onboarding.service';
-import { CreateOnboardingDto } from '?';
-import { UpdateOnboardingDto } from '?';
+import { OnboardingService } from '@core/domain/services/onboarding.service';
+import { CreateOnboardingDto, UpdateOnboardingDto } from '@application/api/dto/onboarding.dto';
 
 @ApiTags('onboarding')
 @Controller('onboarding')
@@ -15,45 +13,44 @@ export class OnboardingController {
 
   @Post()
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new onboarding record' })
-  @ApiResponse({ status: 201, description: 'Onboarding record created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createOnboardingDto: CreateOnboardingDto) {
-    return this.onboardingService.create(createOnboardingDto);
+  @ApiOperation({ summary: 'Create onboarding workflow' })
+  @ApiResponse({ status: 201, description: 'Onboarding workflow created successfully' })
+  create(@Body() dto: CreateOnboardingDto) {
+    return this.onboardingService.create(dto);
   }
 
   @Get()
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all onboarding records' })
-  @ApiResponse({ status: 200, description: 'List of onboarding records' })
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'List onboarding workflows' })
   findAll() {
     return this.onboardingService.findAll();
   }
 
   @Get(':id')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get onboarding record by ID' })
-  @ApiResponse({ status: 200, description: 'Onboarding record details' })
-  @ApiResponse({ status: 404, description: 'Onboarding record not found' })
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Get onboarding workflow by ID' })
   findOne(@Param('id') id: string) {
-    return this.onboardingService.findOne(id);
+    return this.onboardingService.findById(id);
+  }
+
+  @Get('employee/:employeeId')
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'List onboarding workflows for employee' })
+  findByEmployee(@Param('employeeId') employeeId: string) {
+    return this.onboardingService.findByEmployee(employeeId);
   }
 
   @Patch(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update onboarding record details' })
-  @ApiResponse({ status: 200, description: 'Onboarding record updated successfully' })
-  @ApiResponse({ status: 404, description: 'Onboarding record not found' })
-  update(@Param('id') id: string, @Body() updateOnboardingDto: UpdateOnboardingDto) {
-    return this.onboardingService.update(id, updateOnboardingDto);
+  @ApiOperation({ summary: 'Update onboarding workflow' })
+  update(@Param('id') id: string, @Body() dto: UpdateOnboardingDto) {
+    return this.onboardingService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove an onboarding record' })
-  @ApiResponse({ status: 200, description: 'Onboarding record removed successfully' })
-  @ApiResponse({ status: 404, description: 'Onboarding record not found' })
+  @ApiOperation({ summary: 'Delete onboarding workflow' })
   remove(@Param('id') id: string) {
-    return this.onboardingService.remove(id);
+    return this.onboardingService.delete(id);
   }
 }

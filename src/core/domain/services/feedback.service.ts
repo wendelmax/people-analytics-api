@@ -1,151 +1,156 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateFeedbackDto } from '@application/graphql/dto/create-feedback.dto';
-import { UpdateFeedbackDto } from '@application/graphql/dto/update-feedback.dto';
-import { Feedback } from '@application/graphql/types/feedback.type';
+import { CreateFeedbackDto, UpdateFeedbackDto } from '@application/api/dto/feedback.dto';
+import { FeedbackType, SentimentType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class FeedbackService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<Feedback[]> {
-    const result = await this.prisma.feedback.findMany({
+  async findAll(): Promise<FeedbackModel[]> {
+    const feedbacks = await this.prisma.feedback.findMany({
       include: {
-        employee: true,
-        skills: true,
+        author: true,
+        recipient: true,
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    return result.map((feedback) => ({
-      id: feedback.id.toString(),
-      employeeId: feedback.employeeId.toString(),
-      title: feedback.title,
-      content: feedback.content,
-      type: feedback.type,
-      rating: feedback.rating,
-      skillIds: feedback.skills.map((s) => s.id.toString()),
-      createdAt: feedback.createdAt,
-      updatedAt: feedback.updatedAt,
-    }));
+    return feedbacks.map((feedback) => this.mapToModel(feedback));
   }
 
-  async findById(id: string): Promise<Feedback> {
-    const result = await this.prisma.feedback.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<FeedbackModel> {
+    const feedback = await this.prisma.feedback.findUnique({
+      where: { id },
       include: {
-        employee: true,
-        skills: true,
+        author: true,
+        recipient: true,
       },
     });
 
-    if (!result) {
+    if (!feedback) {
       throw new NotFoundException(`Feedback with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      content: result.content,
-      type: result.type,
-      rating: result.rating,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(feedback);
   }
 
-  async findByEmployeeId(employeeId: string): Promise<Feedback[]> {
-    const result = await this.prisma.feedback.findMany({
-      where: {
-        employeeId: parseInt(employeeId),
+  async findByRecipientId(recipientId: string): Promise<FeedbackModel[]> {
+    const feedbacks = await this.prisma.feedback.findMany({
+      where: { recipientId },
+      include: {
+        author: true,
+        recipient: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return feedbacks.map((feedback) => this.mapToModel(feedback));
+  }
+
+  async findByAuthorId(authorId: string): Promise<FeedbackModel[]> {
+    const feedbacks = await this.prisma.feedback.findMany({
+      where: { authorId },
+      include: {
+        author: true,
+        recipient: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return feedbacks.map((feedback) => this.mapToModel(feedback));
+  }
+
+  async create(data: CreateFeedbackDto): Promise<FeedbackModel> {
+    const feedback = await this.prisma.feedback.create({
+      data: {
+        authorId: data.authorId,
+        recipientId: data.recipientId,
+        type: data.type,
+        sentiment: data.sentiment,
+        title: data.title,
+        content: data.content,
+        rating: data.rating,
+        tags: data.tags ?? [],
       },
       include: {
-        employee: true,
-        skills: true,
+        author: true,
+        recipient: true,
       },
     });
 
-    return result.map((feedback) => ({
-      id: feedback.id.toString(),
-      employeeId: feedback.employeeId.toString(),
+    return this.mapToModel(feedback);
+  }
+
+  async update(id: string, data: UpdateFeedbackDto): Promise<FeedbackModel> {
+    await this.ensureExists(id);
+
+    const feedback = await this.prisma.feedback.update({
+      where: { id },
+      data: {
+        type: data.type,
+        sentiment: data.sentiment,
+        title: data.title,
+        content: data.content,
+        rating: data.rating,
+        tags: data.tags,
+      },
+      include: {
+        author: true,
+        recipient: true,
+      },
+    });
+
+    return this.mapToModel(feedback);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.ensureExists(id);
+    await this.prisma.feedback.delete({ where: { id } });
+    return true;
+  }
+
+  private async ensureExists(id: string): Promise<void> {
+    const exists = await this.prisma.feedback.findUnique({ where: { id }, select: { id: true } });
+    if (!exists) {
+      throw new NotFoundException(`Feedback with ID ${id} not found`);
+    }
+  }
+
+  private mapToModel(feedback: FeedbackWithRelations): FeedbackModel {
+    return {
+      id: feedback.id,
+      authorId: feedback.authorId,
+      recipientId: feedback.recipientId,
+      type: feedback.type,
+      sentiment: feedback.sentiment,
       title: feedback.title,
       content: feedback.content,
-      type: feedback.type,
-      rating: feedback.rating,
-      skillIds: feedback.skills.map((s) => s.id.toString()),
+      rating: feedback.rating ?? undefined,
+      tags: feedback.tags,
       createdAt: feedback.createdAt,
       updatedAt: feedback.updatedAt,
-    }));
-  }
-
-  async create(data: CreateFeedbackDto): Promise<Feedback> {
-    const result = await this.prisma.feedback.create({
-      data: {
-        employeeId: parseInt(data.employeeId),
-        title: data.title,
-        content: data.content,
-        type: data.type,
-        rating: data.rating,
-        skills: {
-          connect: data.skillIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        skills: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      content: result.content,
-      type: result.type,
-      rating: result.rating,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
-  }
-
-  async update(id: string, data: UpdateFeedbackDto): Promise<Feedback> {
-    const result = await this.prisma.feedback.update({
-      where: { id: parseInt(id) },
-      data: {
-        title: data.title,
-        content: data.content,
-        type: data.type,
-        rating: data.rating,
-        skills: {
-          set: data.skillIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        skills: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      content: result.content,
-      type: result.type,
-      rating: result.rating,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
-  }
-
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
-    await this.prisma.feedback.delete({
-      where: { id: parseInt(id) },
-    });
-    return { success: true };
   }
 }
+
+type FeedbackWithRelations = Prisma.FeedbackGetPayload<{
+  include: {
+    author: true;
+    recipient: true;
+  };
+}>;
+
+export type FeedbackModel = {
+  id: string;
+  authorId: string;
+  recipientId: string;
+  type: FeedbackType;
+  sentiment: SentimentType;
+  title: string;
+  content: string;
+  rating?: number;
+  tags: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};

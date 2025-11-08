@@ -1,11 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthDecorator } from '../auth/decorator/auth.decorator';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-
-import { OffboardingService } from '../../../domain/offboarding/services/offboarding.service';
-import { CreateOffboardingDto } from '?';
-import { UpdateOffboardingDto } from '?';
+import { OffboardingService } from '@core/domain/services/offboarding.service';
+import { CreateOffboardingDto, UpdateOffboardingDto } from '@application/api/dto/offboarding.dto';
 
 @ApiTags('offboarding')
 @Controller('offboarding')
@@ -15,45 +13,44 @@ export class OffboardingController {
 
   @Post()
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new offboarding record' })
-  @ApiResponse({ status: 201, description: 'Offboarding record created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createOffboardingDto: CreateOffboardingDto) {
-    return this.offboardingService.create(createOffboardingDto);
+  @ApiOperation({ summary: 'Create offboarding workflow' })
+  @ApiResponse({ status: 201, description: 'Offboarding workflow created successfully' })
+  create(@Body() dto: CreateOffboardingDto) {
+    return this.offboardingService.create(dto);
   }
 
   @Get()
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all offboarding records' })
-  @ApiResponse({ status: 200, description: 'List of offboarding records' })
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'List offboarding workflows' })
   findAll() {
     return this.offboardingService.findAll();
   }
 
   @Get(':id')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get offboarding record by ID' })
-  @ApiResponse({ status: 200, description: 'Offboarding record details' })
-  @ApiResponse({ status: 404, description: 'Offboarding record not found' })
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Get offboarding workflow by ID' })
   findOne(@Param('id') id: string) {
-    return this.offboardingService.findOne(id);
+    return this.offboardingService.findById(id);
+  }
+
+  @Get('employee/:employeeId')
+  @AuthDecorator(UserRole.HR_MANAGER, UserRole.MANAGER)
+  @ApiOperation({ summary: 'List offboarding workflows for employee' })
+  findByEmployee(@Param('employeeId') employeeId: string) {
+    return this.offboardingService.findByEmployee(employeeId);
   }
 
   @Patch(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update offboarding record details' })
-  @ApiResponse({ status: 200, description: 'Offboarding record updated successfully' })
-  @ApiResponse({ status: 404, description: 'Offboarding record not found' })
-  update(@Param('id') id: string, @Body() updateOffboardingDto: UpdateOffboardingDto) {
-    return this.offboardingService.update(id, updateOffboardingDto);
+  @ApiOperation({ summary: 'Update offboarding workflow' })
+  update(@Param('id') id: string, @Body() dto: UpdateOffboardingDto) {
+    return this.offboardingService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove an offboarding record' })
-  @ApiResponse({ status: 200, description: 'Offboarding record removed successfully' })
-  @ApiResponse({ status: 404, description: 'Offboarding record not found' })
+  @ApiOperation({ summary: 'Delete offboarding workflow' })
   remove(@Param('id') id: string) {
-    return this.offboardingService.remove(id);
+    return this.offboardingService.delete(id);
   }
 }

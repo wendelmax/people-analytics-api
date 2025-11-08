@@ -22,7 +22,10 @@ export class EmployeeResolver {
   async createEmployee(
     @Args('createEmployeeInput') createEmployeeInput: CreateEmployeeInput,
   ): Promise<Employee> {
-    return this.employeeService.create(createEmployeeInput);
+    return this.employeeService.create({
+      ...createEmployeeInput,
+      hireDate: createEmployeeInput.hireDate.toISOString(),
+    });
   }
 
   @Mutation(() => Employee)
@@ -30,11 +33,16 @@ export class EmployeeResolver {
     @Args('id', { type: () => ID }) id: string,
     @Args('updateEmployeeInput') updateEmployeeInput: UpdateEmployeeInput,
   ): Promise<Employee> {
-    return this.employeeService.update(id, updateEmployeeInput);
+    return this.employeeService.update(id, {
+      ...updateEmployeeInput,
+      hireDate: updateEmployeeInput.hireDate
+        ? updateEmployeeInput.hireDate.toISOString()
+        : undefined,
+    });
   }
 
-  @Mutation(() => Employee)
-  async deleteEmployee(@Args('id', { type: () => ID }) id: string): Promise<Employee> {
+  @Mutation(() => Boolean)
+  async deleteEmployee(@Args('id', { type: () => ID }) id: string): Promise<boolean> {
     return this.employeeService.delete(id);
   }
 }

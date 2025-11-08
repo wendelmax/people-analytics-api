@@ -1,57 +1,63 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { PerformanceService } from '@core/domain/performance/services/performance.service';
-import { CreatePerformanceDto, UpdatePerformanceDto } from '@shared/dto/base.dto';
+import { PerformanceService } from '@core/domain/services/performance.service';
+import {
+  CreatePerformanceReviewDto,
+  UpdatePerformanceReviewDto,
+} from '@application/api/dto/performance-review.dto';
 
-@ApiTags('performance')
-@Controller('performance')
+@ApiTags('performance-reviews')
+@Controller('performance-reviews')
 @ApiBearerAuth()
 export class PerformanceController {
   constructor(private readonly performanceService: PerformanceService) {}
 
   @Post()
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new performance record' })
-  @ApiResponse({ status: 201, description: 'Performance record created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createPerformanceDto: CreatePerformanceDto) {
-    return this.performanceService.create(createPerformanceDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Create performance review' })
+  @ApiResponse({ status: 201, description: 'Performance review created successfully' })
+  create(@Body() dto: CreatePerformanceReviewDto) {
+    return this.performanceService.create(dto);
   }
 
   @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all performance records' })
-  @ApiResponse({ status: 200, description: 'List of performance records' })
+  @ApiOperation({ summary: 'List performance reviews' })
   findAll() {
     return this.performanceService.findAll();
   }
 
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get performance record by ID' })
-  @ApiResponse({ status: 200, description: 'Performance record details' })
-  @ApiResponse({ status: 404, description: 'Performance record not found' })
+  @ApiOperation({ summary: 'Get performance review by ID' })
   findOne(@Param('id') id: string) {
-    return this.performanceService.findOne(id);
+    return this.performanceService.findById(id);
   }
 
   @Patch(':id')
-  @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update performance record details' })
-  @ApiResponse({ status: 200, description: 'Performance record updated successfully' })
-  @ApiResponse({ status: 404, description: 'Performance record not found' })
-  update(@Param('id') id: string, @Body() updatePerformanceDto: UpdatePerformanceDto) {
-    return this.performanceService.update(id, updatePerformanceDto);
+  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Update performance review' })
+  update(@Param('id') id: string, @Body() dto: UpdatePerformanceReviewDto) {
+    return this.performanceService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a performance record' })
-  @ApiResponse({ status: 200, description: 'Performance record removed successfully' })
-  @ApiResponse({ status: 404, description: 'Performance record not found' })
-  remove(@Param('id') id: string) {
-    return this.performanceService.remove(id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete performance review' })
+  async remove(@Param('id') id: string) {
+    await this.performanceService.delete(id);
   }
 }

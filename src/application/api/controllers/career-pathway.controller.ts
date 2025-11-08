@@ -1,59 +1,49 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthDecorator } from '../auth/decorator/auth.decorator';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
+import { CareerPathService } from '@core/domain/services/career-path.service';
+import { CreateCareerPathDto, UpdateCareerPathDto } from '@application/api/dto/career-path.dto';
 
-import { CareerService } from '@core/domain/career/service/CareerService';
-import { CreateCareerPathwayDto } from '?';
-import { UpdateCareerPathwayDto } from '?';
-
-@ApiTags('career-pathway')
-@Controller('career-pathway')
+@ApiTags('career-paths')
+@Controller('career-paths')
 @ApiBearerAuth()
 export class CareerPathwayController {
-  constructor(private readonly careerPathwayService: CareerService) {}
+  constructor(private readonly careerPathService: CareerPathService) {}
 
   @Post()
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Create a new career pathway' })
-  @ApiResponse({ status: 201, description: 'Career pathway created successfully' })
-  @ApiResponse({ status: 400, description: 'Bad Request' })
-  create(@Body() createCareerPathwayDto: CreateCareerPathwayDto) {
-    return this.careerPathwayService.create(createCareerPathwayDto);
+  @ApiOperation({ summary: 'Create career path' })
+  @ApiResponse({ status: 201, description: 'Career path created successfully' })
+  create(@Body() dto: CreateCareerPathDto) {
+    return this.careerPathService.create(dto);
   }
 
   @Get()
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List all career pathways' })
-  @ApiResponse({ status: 200, description: 'List of career pathways' })
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'List career paths' })
   findAll() {
-    return this.careerPathwayService.findAll();
+    return this.careerPathService.findAll();
   }
 
   @Get(':id')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get career pathway by ID' })
-  @ApiResponse({ status: 200, description: 'Career pathway details' })
-  @ApiResponse({ status: 404, description: 'Career pathway not found' })
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Get career path by ID' })
   findOne(@Param('id') id: string) {
-    return this.careerPathwayService.findOne(id);
+    return this.careerPathService.findById(id);
   }
 
   @Patch(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update career pathway details' })
-  @ApiResponse({ status: 200, description: 'Career pathway updated successfully' })
-  @ApiResponse({ status: 404, description: 'Career pathway not found' })
-  update(@Param('id') id: string, @Body() updateCareerPathwayDto: UpdateCareerPathwayDto) {
-    return this.careerPathwayService.update(id, updateCareerPathwayDto);
+  @ApiOperation({ summary: 'Update career path' })
+  update(@Param('id') id: string, @Body() dto: UpdateCareerPathDto) {
+    return this.careerPathService.update(id, dto);
   }
 
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Remove a career pathway' })
-  @ApiResponse({ status: 200, description: 'Career pathway removed successfully' })
-  @ApiResponse({ status: 404, description: 'Career pathway not found' })
+  @ApiOperation({ summary: 'Delete career path' })
   remove(@Param('id') id: string) {
-    return this.careerPathwayService.remove(id);
+    return this.careerPathService.delete(id);
   }
 }

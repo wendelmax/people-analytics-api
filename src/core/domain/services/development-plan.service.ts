@@ -1,166 +1,181 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@infrastructure/database/prisma.service';
-import { CreateDevelopmentPlanInput } from '@application/graphql/inputs/create-development-plan.input';
-import { UpdateDevelopmentPlanInput } from '@application/graphql/inputs/update-development-plan.input';
-import { DevelopmentPlan } from '@application/graphql/types/development-plan.type';
+import {
+  CreateDevelopmentPlanDto,
+  UpdateDevelopmentPlanDto,
+} from '@application/api/dto/development-plan.dto';
+import { DevelopmentPlanStatus, DevelopmentItemStatus, Prisma } from '@prisma/client';
 
 @Injectable()
 export class DevelopmentPlanService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(): Promise<DevelopmentPlan[]> {
-    const result = await this.prisma.developmentPlan.findMany({
+  async findAll(): Promise<DevelopmentPlanModel[]> {
+    const plans = await this.prisma.developmentPlan.findMany({
       include: {
         employee: true,
-        skills: true,
+        items: true,
       },
+      orderBy: { startDate: 'desc' },
     });
 
-    return result.map((plan) => ({
-      id: plan.id.toString(),
-      employeeId: plan.employeeId.toString(),
-      title: plan.title,
-      description: plan.description,
-      startDate: plan.startDate,
-      endDate: plan.endDate,
-      status: plan.status,
-      goals: plan.goals,
-      skillIds: plan.skills.map((s) => s.id.toString()),
-      createdAt: plan.createdAt,
-      updatedAt: plan.updatedAt,
-    }));
+    return plans.map((plan) => this.mapToModel(plan));
   }
 
-  async findById(id: string): Promise<DevelopmentPlan> {
-    const result = await this.prisma.developmentPlan.findUnique({
-      where: { id: parseInt(id) },
+  async findById(id: string): Promise<DevelopmentPlanModel> {
+    const plan = await this.prisma.developmentPlan.findUnique({
+      where: { id },
       include: {
         employee: true,
-        skills: true,
+        items: true,
       },
     });
 
-    if (!result) {
+    if (!plan) {
       throw new NotFoundException(`Development plan with ID ${id} not found`);
     }
 
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      description: result.description,
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      goals: result.goals,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
+    return this.mapToModel(plan);
   }
 
-  async findByEmployeeId(employeeId: string): Promise<DevelopmentPlan[]> {
-    const result = await this.prisma.developmentPlan.findMany({
-      where: {
-        employeeId: parseInt(employeeId),
+  async findByEmployeeId(employeeId: string): Promise<DevelopmentPlanModel[]> {
+    const plans = await this.prisma.developmentPlan.findMany({
+      where: { employeeId },
+      include: {
+        employee: true,
+        items: true,
+      },
+      orderBy: { startDate: 'desc' },
+    });
+
+    return plans.map((plan) => this.mapToModel(plan));
+  }
+
+  async create(data: CreateDevelopmentPlanDto): Promise<DevelopmentPlanModel> {
+    const plan = await this.prisma.developmentPlan.create({
+      data: {
+        employeeId: data.employeeId,
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        startDate: new Date(data.startDate),
+        targetDate: new Date(data.targetDate),
+        items: data.items?.length
+          ? {
+              create: data.items.map((item) => ({
+                title: item.title,
+                description: item.description,
+                status: item.status,
+                skillId: item.skillId,
+                dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
+              })),
+            }
+          : undefined,
       },
       include: {
         employee: true,
-        skills: true,
-        trainings: true,
+        items: true,
       },
     });
 
-    return result.map((plan) => ({
-      id: plan.id.toString(),
-      employeeId: plan.employeeId.toString(),
+    return this.mapToModel(plan);
+  }
+
+  async update(id: string, data: UpdateDevelopmentPlanDto): Promise<DevelopmentPlanModel> {
+    await this.ensureExists(id);
+
+    const plan = await this.prisma.developmentPlan.update({
+      where: { id },
+      data: {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        startDate: data.startDate ? new Date(data.startDate) : undefined,
+        targetDate: data.targetDate ? new Date(data.targetDate) : undefined,
+        items: data.items
+          ? {
+              deleteMany: {},
+              create: data.items.map((item) => ({
+                title: item.title,
+                description: item.description,
+                status: item.status,
+                skillId: item.skillId,
+                dueDate: item.dueDate ? new Date(item.dueDate) : undefined,
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        employee: true,
+        items: true,
+      },
+    });
+
+    return this.mapToModel(plan);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    await this.ensureExists(id);
+    await this.prisma.developmentPlan.delete({ where: { id } });
+    return true;
+  }
+
+  private async ensureExists(id: string): Promise<void> {
+    const exists = await this.prisma.developmentPlan.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!exists) {
+      throw new NotFoundException(`Development plan with ID ${id} not found`);
+    }
+  }
+
+  private mapToModel(plan: DevelopmentPlanWithRelations): DevelopmentPlanModel {
+    return {
+      id: plan.id,
+      employeeId: plan.employeeId,
       title: plan.title,
-      description: plan.description,
-      startDate: plan.startDate,
-      endDate: plan.endDate,
+      description: plan.description ?? undefined,
       status: plan.status,
-      skillIds: plan.skills.map((s) => s.id.toString()),
-      trainingIds: plan.trainings.map((t) => t.id.toString()),
+      startDate: plan.startDate,
+      targetDate: plan.targetDate,
+      items: plan.items.map((item) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description ?? undefined,
+        status: item.status,
+        skillId: item.skillId ?? undefined,
+        dueDate: item.dueDate ?? undefined,
+      })),
       createdAt: plan.createdAt,
       updatedAt: plan.updatedAt,
-    }));
-  }
-
-  async create(data: CreateDevelopmentPlanInput): Promise<DevelopmentPlan> {
-    const result = await this.prisma.developmentPlan.create({
-      data: {
-        employeeId: parseInt(data.employeeId),
-        title: data.title,
-        description: data.description,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
-        goals: data.goals,
-        skills: {
-          connect: data.skillIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        skills: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      description: result.description,
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      goals: result.goals,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
     };
-  }
-
-  async update(id: string, data: UpdateDevelopmentPlanInput): Promise<DevelopmentPlan> {
-    const result = await this.prisma.developmentPlan.update({
-      where: { id: parseInt(id) },
-      data: {
-        title: data.title,
-        description: data.description,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: data.status,
-        goals: data.goals,
-        skills: {
-          set: data.skillIds.map((id) => ({ id: parseInt(id) })),
-        },
-      },
-      include: {
-        employee: true,
-        skills: true,
-      },
-    });
-
-    return {
-      id: result.id.toString(),
-      employeeId: result.employeeId.toString(),
-      title: result.title,
-      description: result.description,
-      startDate: result.startDate,
-      endDate: result.endDate,
-      status: result.status,
-      goals: result.goals,
-      skillIds: result.skills.map((s) => s.id.toString()),
-      createdAt: result.createdAt,
-      updatedAt: result.updatedAt,
-    };
-  }
-
-  async delete(id: string): Promise<{ success: boolean }> {
-    await this.findById(id);
-    await this.prisma.developmentPlan.delete({
-      where: { id: parseInt(id) },
-    });
-    return { success: true };
   }
 }
+
+type DevelopmentPlanWithRelations = Prisma.DevelopmentPlanGetPayload<{
+  include: {
+    employee: true;
+    items: true;
+  };
+}>;
+
+export type DevelopmentPlanModel = {
+  id: string;
+  employeeId: string;
+  title: string;
+  description?: string;
+  status: DevelopmentPlanStatus;
+  startDate: Date;
+  targetDate: Date;
+  items: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    status: DevelopmentItemStatus;
+    skillId?: string;
+    dueDate?: Date;
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+};
