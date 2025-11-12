@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Get, Param, Query, Patch, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AuthDecorator } from '../auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 import { AIService } from '@core/common/services/AIService';
@@ -25,6 +25,7 @@ export class ChatbotController {
   @Post('interact')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Interage com o chatbot' })
+  @ApiQuery({ name: 'context', required: false, description: 'Contexto da conversa' })
   async interact(
     @Body() interactionDto: ChatbotInteractionDto,
     @Query('context') context?: string,
@@ -38,6 +39,7 @@ export class ChatbotController {
   @Post('analyze-performance')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Analisa performance via chatbot' })
+  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
   async analyzePerformance(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
@@ -53,6 +55,7 @@ export class ChatbotController {
   @Post('career-guidance')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Fornece orientação de carreira via chatbot' })
+  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
   async getCareerGuidance(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
@@ -66,6 +69,7 @@ export class ChatbotController {
   @Post('skills-assessment')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Avalia habilidades via chatbot' })
+  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
   async assessSkills(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
@@ -79,6 +83,7 @@ export class ChatbotController {
   @Post('engagement-feedback')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Obtém feedback de engajamento via chatbot' })
+  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
   async getEngagementFeedback(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
@@ -92,6 +97,9 @@ export class ChatbotController {
   @Get('conversation-history/:userId')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Obtém histórico de conversas do usuário' })
+  @ApiParam({ name: 'userId', description: 'ID do usuário' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Número máximo de resultados' })
+  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Número de resultados para pular' })
   async getConversationHistory(
     @Param('userId') userId: string,
     @Query('limit') limit?: number,
@@ -117,6 +125,8 @@ export class ChatbotController {
   @Get('suggestions/:userId')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Obtém sugestões personalizadas baseadas no histórico' })
+  @ApiParam({ name: 'userId', description: 'ID do usuário' })
+  @ApiQuery({ name: 'context', required: false, description: 'Contexto para as sugestões' })
   async getSuggestions(@Param('userId') userId: string, @Query('context') context?: string) {
     return this.chatbotService.generateSuggestions(userId, context);
   }
@@ -148,6 +158,7 @@ export class ChatbotController {
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Get chatbot interaction by ID' })
+  @ApiParam({ name: 'id', description: 'ID da interação do chatbot' })
   @ApiResponse({ status: 200, description: 'Chatbot interaction details' })
   @ApiResponse({ status: 404, description: 'Chatbot interaction not found' })
   findOne(@Param('id') id: string) {
@@ -157,6 +168,7 @@ export class ChatbotController {
   @Patch(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Update chatbot interaction details' })
+  @ApiParam({ name: 'id', description: 'ID da interação do chatbot' })
   @ApiResponse({ status: 200, description: 'Chatbot interaction updated successfully' })
   @ApiResponse({ status: 404, description: 'Chatbot interaction not found' })
   update(@Param('id') id: string, @Body() updateChatbotDto: UpdateChatbotDto) {
@@ -166,6 +178,7 @@ export class ChatbotController {
   @Delete(':id')
   @AuthDecorator(UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Remove a chatbot interaction' })
+  @ApiParam({ name: 'id', description: 'ID da interação do chatbot' })
   @ApiResponse({ status: 200, description: 'Chatbot interaction removed successfully' })
   @ApiResponse({ status: 404, description: 'Chatbot interaction not found' })
   remove(@Param('id') id: string) {

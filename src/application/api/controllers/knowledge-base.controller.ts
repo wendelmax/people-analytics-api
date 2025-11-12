@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 import { KnowledgeBaseService } from '@core/domain/services/knowledge-base.service';
@@ -33,6 +33,7 @@ export class KnowledgeBaseController {
   @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Get knowledge base article by ID' })
+  @ApiParam({ name: 'id', description: 'ID do artigo' })
   findOne(@Param('id') id: string) {
     return this.knowledgeBaseService.findById(id);
   }
@@ -54,6 +55,7 @@ export class KnowledgeBaseController {
   @Get('search')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Search knowledge base content' })
+  @ApiQuery({ name: 'term', description: 'Termo de busca' })
   search(@Query('term') searchTerm: string) {
     return this.knowledgeBaseService.searchArticles(searchTerm);
   }

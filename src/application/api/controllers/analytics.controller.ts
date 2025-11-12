@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiParam } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 import { AnalyticsService } from '@core/domain/services/analytics.service';
@@ -21,6 +21,7 @@ export class AnalyticsController {
   @Get('employee/:employeeId')
   @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER, UserRole.HR_DIRECTOR, UserRole.EXECUTIVE)
   @ApiOperation({ summary: 'Get analytics snapshot for employee' })
+  @ApiParam({ name: 'employeeId', description: 'ID do funcionário' })
   getEmployeeSnapshot(@Param('employeeId') employeeId: string) {
     return this.analyticsService.getEmployeeSnapshot(employeeId);
   }

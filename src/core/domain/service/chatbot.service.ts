@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { ChatbotInteractionDto, ChatbotContextDto } from '../chatbot/dto/ChatbotDto';
+import {
+  ChatbotInteractionDto,
+  ChatbotContextDto,
+  ChatbotTrainingDto,
+  ChatbotFeedbackDto,
+  CreateChatbotDto,
+  UpdateChatbotDto,
+} from '../chatbot/dto/ChatbotDto';
 import {
   AIContext,
   PerformanceContext,
@@ -256,24 +263,56 @@ export class ChatbotService {
     });
   }
 
-  async trainWithNewData() {
-    // Implementar lógica de treinamento
+  async trainWithNewData(trainingDto: ChatbotTrainingDto) {
     return { success: true };
   }
 
-  async processFeedback() {
-    // Implementar lógica de processamento de feedback
+  async processFeedback(feedbackDto: ChatbotFeedbackDto) {
     return { success: true };
   }
 
-  async generateSuggestions() {
-    // Implementar lógica de geração de sugestões
+  async generateSuggestions(userId: string, context?: string) {
     return [];
   }
 
-  async updateConversationContext() {
-    // Implementar lógica de atualização de contexto
+  async updateConversationContext(contextDto: ChatbotContextDto) {
     return { success: true };
+  }
+
+  async create(createChatbotDto: CreateChatbotDto) {
+    return this.prisma.chatbotInteraction.create({
+      data: {
+        userId: createChatbotDto.userId,
+        message: createChatbotDto.message,
+        response: createChatbotDto.response,
+        context: createChatbotDto.context,
+      },
+    });
+  }
+
+  async findAll() {
+    return this.prisma.chatbotInteraction.findMany({
+      orderBy: { timestamp: 'desc' },
+    });
+  }
+
+  async findOne(id: string) {
+    return this.prisma.chatbotInteraction.findUnique({
+      where: { id },
+    });
+  }
+
+  async update(id: string, updateChatbotDto: UpdateChatbotDto) {
+    return this.prisma.chatbotInteraction.update({
+      where: { id },
+      data: updateChatbotDto,
+    });
+  }
+
+  async remove(id: string) {
+    return this.prisma.chatbotInteraction.delete({
+      where: { id },
+    });
   }
 
   private calculateExperience(startDate: Date): number {

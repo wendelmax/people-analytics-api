@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiParam } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 import { PerformanceInsightsService } from '@core/domain/services/performance-insights.service';
@@ -35,6 +35,7 @@ export class PerformanceInsightsController {
   @Get('employee/:employeeId')
   @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER, UserRole.HR_DIRECTOR, UserRole.EXECUTIVE)
   @ApiOperation({ summary: 'Get performance insights for an employee' })
+  @ApiParam({ name: 'employeeId', description: 'ID do funcionário' })
   getEmployee(@Param('employeeId') employeeId: string) {
     return this.performanceInsightsService.getEmployeeInsight(employeeId);
   }
