@@ -10,17 +10,10 @@ import { CareerService } from '@core/domain/services/career.service';
 export class CareerController {
   constructor(private readonly careerService: CareerService) {}
 
-  @Get('employees/:employeeId/overview')
+  @Get()
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get career overview for an employee' })
-  getEmployeeOverview(@Param('employeeId') employeeId: string) {
-    return this.careerService.getEmployeeOverview(employeeId);
-  }
-
-  @Get('employees/:employeeId/suggested-paths')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get suggested career paths for an employee' })
-  getSuggestedPaths(@Param('employeeId') employeeId: string) {
-    return this.careerService.getSuggestedPaths(employeeId);
+  @ApiOperation({ summary: 'List career information' })
+  findAll() {
+    return this.careerService.findAll();
   }
 }

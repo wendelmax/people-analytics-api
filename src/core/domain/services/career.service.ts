@@ -8,6 +8,7 @@ import {
   RecommendationStatus,
   TrainingStatus,
 } from '@prisma/client';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class CareerService {
@@ -191,7 +192,52 @@ export class CareerService {
         : undefined,
     }));
   }
+
+  async findAll(): Promise<CareerInfoModel[]> {
+    const employees = await this.prisma.employee.findMany({
+      include: {
+        position: true,
+        department: true,
+        goals: {
+          where: {
+            status: {
+              notIn: [GoalStatus.COMPLETED, GoalStatus.CANCELLED],
+            },
+          },
+        },
+        skills: {
+          include: {
+            skill: true,
+          },
+        },
+      },
+    });
+
+    return employees.map((employee) => ({
+      id: randomUUID(),
+      employeeId: employee.id,
+      currentPosition: employee.position?.title || 'Unknown',
+      careerPath: [],
+      aspirations: employee.goals.map((goal) => goal.title),
+      skillsToDevelop: employee.skills
+        .filter((es) => es.proficiency === 'BEGINNER' || es.proficiency === 'INTERMEDIATE')
+        .map((es) => es.skill.name),
+      createdAt: employee.createdAt,
+      updatedAt: employee.updatedAt,
+    }));
+  }
 }
+
+export type CareerInfoModel = {
+  id: string;
+  employeeId: string;
+  currentPosition: string;
+  careerPath: any[];
+  aspirations: string[];
+  skillsToDevelop: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export type CareerOverviewModel = {
   employee: {

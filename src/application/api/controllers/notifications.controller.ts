@@ -63,27 +63,17 @@ export class NotificationsController {
     await this.notificationService.delete(id);
   }
 
-  @Post('preferences')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Upsert notification preference' })
-  upsertPreference(@Body() dto: CreateNotificationPreferenceDto) {
-    return this.notificationService.upsertPreference(dto);
+  @Patch(':id/read')
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Mark notification as read' })
+  markAsRead(@Param('id') id: string) {
+    return this.notificationService.markAsRead(id);
   }
 
-  @Patch('preferences/:employeeId')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Update notification preference' })
-  updatePreference(
-    @Param('employeeId') employeeId: string,
-    @Body() dto: UpdateNotificationPreferenceDto,
-  ) {
-    return this.notificationService.upsertPreference({ ...dto, employeeId });
-  }
-
-  @Get('preferences/:employeeId')
-  @AuthDecorator(UserRole.EMPLOYEE, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'List notification preferences for employee' })
-  getPreferences(@Param('employeeId') employeeId: string) {
-    return this.notificationService.getPreferences(employeeId);
+  @Get('user/:userId/unread')
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'List unread notifications for user' })
+  getUnreadNotifications(@Param('userId') userId: string) {
+    return this.notificationService.getUnreadNotifications(userId);
   }
 }

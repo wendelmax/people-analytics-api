@@ -83,6 +83,31 @@ export class NotificationService {
     return true;
   }
 
+  async markAsRead(id: string): Promise<NotificationModel> {
+    await this.ensureNotificationExists(id);
+    const notification = await this.prisma.notification.update({
+      where: { id },
+      data: {
+        status: NotificationStatus.READ,
+        readAt: new Date(),
+      },
+    });
+    return this.mapNotification(notification);
+  }
+
+  async getUnreadNotifications(userId: string): Promise<NotificationModel[]> {
+    const notifications = await this.prisma.notification.findMany({
+      where: {
+        employeeId: userId,
+        status: {
+          not: NotificationStatus.READ,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    return notifications.map((notification) => this.mapNotification(notification));
+  }
+
   async upsertPreference(
     data: CreateNotificationPreferenceDto | UpdateNotificationPreferenceDto,
   ): Promise<NotificationPreferenceModel> {

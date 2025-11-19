@@ -28,6 +28,7 @@ import { InsightsService } from './insights.service';
 import { ProjectSkillsService } from './project-skills.service';
 import { SkillProficiencyService } from './skill-proficiency.service';
 import { AdminService } from './admin.service';
+import { AuthService } from './auth.service';
 
 @Module({
   imports: [PrismaModule],
@@ -60,6 +61,7 @@ import { AdminService } from './admin.service';
     ProjectSkillsService,
     SkillProficiencyService,
     AdminService,
+    AuthService,
   ],
   exports: [
     EmployeeService,
@@ -90,6 +92,7 @@ import { AdminService } from './admin.service';
     ProjectSkillsService,
     SkillProficiencyService,
     AdminService,
+    AuthService,
   ],
 })
 export class ServicesModule {}

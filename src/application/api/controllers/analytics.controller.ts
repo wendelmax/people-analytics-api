@@ -1,5 +1,5 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 import { AnalyticsService } from '@core/domain/services/analytics.service';
@@ -29,7 +29,9 @@ export class AnalyticsController {
   @Get('performance-trend')
   @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER, UserRole.HR_DIRECTOR, UserRole.EXECUTIVE)
   @ApiOperation({ summary: 'Get performance review trend within a date range' })
-  getPerformanceTrend(@Query() range: AnalyticsRangeDto) {
-    return this.analyticsService.getPerformanceTrend(range);
+  @ApiQuery({ name: 'startDate', required: false, description: 'Start date (ISO format)' })
+  @ApiQuery({ name: 'endDate', required: false, description: 'End date (ISO format)' })
+  getPerformanceTrend(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    return this.analyticsService.getPerformanceTrend({ startDate, endDate });
   }
 }

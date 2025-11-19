@@ -15,7 +15,7 @@ export class AnalyticsService {
   async getOverview(): Promise<AnalyticsOverview> {
     const now = new Date();
 
-    const [employeeCount, activeGoals, openRecommendations, upcomingTrainings, skillUsage] =
+    const [employeeCount, activeGoals, openRecommendations, upcomingTrainings, skillUsage, averagePerformance] =
       await Promise.all([
         this.prisma.employee.count(),
         this.prisma.goal.count({
@@ -43,6 +43,7 @@ export class AnalyticsService {
           },
         }),
         this.aggregateSkillUsage(),
+        this.calculateAveragePerformance(),
       ]);
 
     return {
@@ -51,7 +52,28 @@ export class AnalyticsService {
       openRecommendations,
       upcomingTrainings,
       topSkills: skillUsage,
+      averagePerformance,
     };
+  }
+
+  private async calculateAveragePerformance(): Promise<number> {
+    const reviews = await this.prisma.performanceReview.findMany({
+      where: {
+        overallRating: {
+          not: null,
+        },
+      },
+      select: {
+        overallRating: true,
+      },
+    });
+
+    if (reviews.length === 0) {
+      return 0;
+    }
+
+    const total = reviews.reduce((sum, review) => sum + (review.overallRating || 0), 0);
+    return total / reviews.length;
   }
 
   async getEmployeeSnapshot(employeeId: string): Promise<EmployeeAnalyticsSnapshot> {
@@ -122,6 +144,49 @@ export class AnalyticsService {
         skillIds: recommendation.skills.map((skill) => skill.skillId),
       })),
     };
+  }
+
+  async getTopPerformers(limit: number = 10): Promise<{ id: string; name: string; averageRating: number }[]> {
+    const reviews = await this.prisma.performanceReview.findMany({
+      where: {
+        overallRating: {
+          not: null,
+        },
+      },
+      include: {
+        employee: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    const employeeRatings = new Map<string, { total: number; count: number }>();
+
+    for (const review of reviews) {
+      if (review.overallRating !== null) {
+        const current = employeeRatings.get(review.employeeId) || { total: 0, count: 0 };
+        current.total += review.overallRating;
+        current.count += 1;
+        employeeRatings.set(review.employeeId, current);
+      }
+    }
+
+    const topPerformers = Array.from(employeeRatings.entries())
+      .map(([employeeId, stats]) => {
+        const employee = reviews.find((r) => r.employeeId === employeeId)?.employee;
+        return {
+          id: employeeId,
+          name: employee?.name || 'Unknown',
+          averageRating: stats.total / stats.count,
+        };
+      })
+      .sort((a, b) => b.averageRating - a.averageRating)
+      .slice(0, limit);
+
+    return topPerformers;
   }
 
   async getPerformanceTrend(range?: AnalyticsRange): Promise<PerformanceTrendPoint[]> {
@@ -251,6 +316,7 @@ export type AnalyticsOverview = {
   openRecommendations: number;
   upcomingTrainings: number;
   topSkills: SkillUsage[];
+  averagePerformance: number;
 };
 
 export type EmployeeAnalyticsSnapshot = {

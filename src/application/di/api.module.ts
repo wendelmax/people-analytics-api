@@ -27,10 +27,12 @@ import { ServicesModule } from '@core/domain/services/services.module';
 import { ProjectSkillsController } from '@application/api/controllers/project-skills.controller';
 import { SkillProficiencyController } from '@application/api/controllers/skill-proficiency.controller';
 import { AdminController } from '@application/api/controllers/admin.controller';
+import { AuthController } from '@application/api/controllers/auth.controller';
 
 @Module({
   imports: [ServicesModule],
   controllers: [
+    AuthController,
     EmployeeController,
     DepartmentsController,
     PositionsController,

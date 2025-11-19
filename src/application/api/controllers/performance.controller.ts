@@ -18,8 +18,8 @@ import {
   UpdatePerformanceReviewDto,
 } from '@application/api/dto/performance-review.dto';
 
-@ApiTags('performance-reviews')
-@Controller('performance-reviews')
+@ApiTags('performance')
+@Controller('performance')
 @ApiBearerAuth()
 export class PerformanceController {
   constructor(private readonly performanceService: PerformanceService) {}

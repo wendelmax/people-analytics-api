@@ -12,6 +12,7 @@ import {
 } from '@core/domain/chatbot/dto/ChatbotDto';
 import { CreateChatbotDto } from '@core/domain/chatbot/dto/ChatbotDto';
 import { UpdateChatbotDto } from '@core/domain/chatbot/dto/ChatbotDto';
+import { randomUUID } from 'crypto';
 
 @ApiTags('Chatbot')
 @Controller('chatbot')
@@ -24,32 +25,49 @@ export class ChatbotController {
 
   @Post('interact')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Interage com o chatbot' })
-  @ApiQuery({ name: 'context', required: false, description: 'Contexto da conversa' })
+  @ApiOperation({ summary: 'Interact with chatbot' })
+  @ApiQuery({ name: 'context', required: false, description: 'Context for the conversation' })
   async interact(
-    @Body() interactionDto: ChatbotInteractionDto,
+    @Body() body: { message: string },
     @Query('context') context?: string,
   ) {
+    const interactionDto = { message: body.message };
     const enrichedContext = await this.chatbotService.enrichContext(interactionDto, context);
-    return this.aiService.generateResponse(interactionDto.message, enrichedContext, {
+    const response = await this.aiService.generateResponse(interactionDto.message, enrichedContext, {
       detailLevel: 'conversational',
     });
+    return {
+      id: randomUUID(),
+      message: body.message,
+      response: response,
+      context: context,
+      timestamp: new Date().toISOString(),
+    };
   }
 
   @Post('analyze-performance')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Analisa performance via chatbot' })
-  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
+  @ApiOperation({ summary: 'Analyze performance via chatbot' })
+  @ApiQuery({ name: 'employeeId', required: true, description: 'Employee ID' })
+  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Detail level' })
   async analyzePerformance(
-    @Body() contextDto: ChatbotContextDto,
+    @Query('employeeId') employeeId: string,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
+    @Body() body: {} = {},
   ) {
+    const contextDto = { employeeId };
     const performanceContext = await this.chatbotService.createPerformanceContext(contextDto);
-    return this.aiService.generateResponse(
+    const response = await this.aiService.generateResponse(
       'Analise a performance do colaborador',
       performanceContext,
       { detailLevel },
     );
+    return {
+      employeeId,
+      analysis: response,
+      detailLevel: detailLevel || 'basic',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   @Post('career-guidance')

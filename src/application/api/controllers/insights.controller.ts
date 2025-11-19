@@ -10,36 +10,41 @@ import { InsightsService } from '@core/domain/services/insights.service';
 export class InsightsController {
   constructor(private readonly insightsService: InsightsService) {}
 
-  @Get('dashboard')
-  @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER, UserRole.HR_DIRECTOR)
-  @ApiOperation({ summary: 'Get organizational insights dashboard' })
-  @ApiQuery({ name: 'departmentId', required: false, description: 'ID do departamento para filtrar' })
-  @ApiResponse({ status: 200, description: 'Aggregated dashboard insights' })
-  getDashboard(@Query('departmentId') departmentId?: string) {
-    return this.insightsService.getDashboard(departmentId);
+  @Get()
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'List all insights' })
+  findAll() {
+    return this.insightsService.findAll();
   }
 
-  @Get('employees/:employeeId')
+  @Get(':id')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
-  @ApiOperation({ summary: 'Get consolidated insights for an employee' })
+  @ApiOperation({ summary: 'Get insight by ID' })
+  findOne(@Param('id') id: string) {
+    return this.insightsService.findById(id);
+  }
+
+  @Get('performance-insights/employee/:employeeId')
+  @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
+  @ApiOperation({ summary: 'Get performance insights for an employee' })
   @ApiParam({ name: 'employeeId', description: 'ID do funcionário' })
-  @ApiResponse({ status: 200, description: 'Employee insights snapshot' })
-  getEmployeeInsights(@Param('employeeId') employeeId: string) {
+  getEmployeePerformanceInsights(@Param('employeeId') employeeId: string) {
     return this.insightsService.getEmployeeInsights(employeeId);
   }
 
-  @Get('departments/:departmentId/performance')
+  @Get('performance-insights/team/:teamId')
   @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER, UserRole.HR_DIRECTOR)
-  @ApiOperation({ summary: 'Get performance insight for a department' })
-  @ApiParam({ name: 'departmentId', description: 'ID do departamento' })
-  getDepartmentPerformance(@Param('departmentId') departmentId: string) {
-    return this.insightsService.getDepartmentPerformance(departmentId);
+  @ApiOperation({ summary: 'Get performance insights for a team' })
+  @ApiParam({ name: 'teamId', description: 'ID do time' })
+  getTeamPerformanceInsights(@Param('teamId') teamId: string) {
+    return this.insightsService.getTeamInsights(teamId);
   }
 
-  @Get('performance-trend')
+  @Get('performance-insights/department/:departmentId')
   @AuthDecorator(UserRole.MANAGER, UserRole.HR_MANAGER, UserRole.HR_DIRECTOR)
-  @ApiOperation({ summary: 'Get global performance review trend' })
-  getPerformanceTrend() {
-    return this.insightsService.getPerformanceTrend();
+  @ApiOperation({ summary: 'Get performance insights for a department' })
+  @ApiParam({ name: 'departmentId', description: 'ID do departamento' })
+  getDepartmentPerformanceInsights(@Param('departmentId') departmentId: string) {
+    return this.insightsService.getDepartmentPerformance(departmentId);
   }
 }
