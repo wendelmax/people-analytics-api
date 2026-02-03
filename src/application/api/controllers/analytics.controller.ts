@@ -3,7 +3,6 @@ import { ApiBearerAuth, ApiOperation, ApiTags, ApiParam, ApiQuery } from '@nestj
 import { AuthDecorator } from '@application/api/auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
 import { AnalyticsService } from '@core/domain/services/analytics.service';
-import { AnalyticsRangeDto } from '@application/api/dto/analytics.dto';
 
 @ApiTags('analytics')
 @Controller('analytics')

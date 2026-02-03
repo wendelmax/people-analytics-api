@@ -15,36 +15,42 @@ export class AnalyticsService {
   async getOverview(): Promise<AnalyticsOverview> {
     const now = new Date();
 
-    const [employeeCount, activeGoals, openRecommendations, upcomingTrainings, skillUsage, averagePerformance] =
-      await Promise.all([
-        this.prisma.employee.count(),
-        this.prisma.goal.count({
-          where: {
-            status: {
-              notIn: [GoalStatus.COMPLETED, GoalStatus.CANCELLED],
-            },
+    const [
+      employeeCount,
+      activeGoals,
+      openRecommendations,
+      upcomingTrainings,
+      skillUsage,
+      averagePerformance,
+    ] = await Promise.all([
+      this.prisma.employee.count(),
+      this.prisma.goal.count({
+        where: {
+          status: {
+            notIn: [GoalStatus.COMPLETED, GoalStatus.CANCELLED],
           },
-        }),
-        this.prisma.recommendation.count({
-          where: {
-            status: {
-              notIn: [RecommendationStatus.COMPLETED, RecommendationStatus.DISMISSED],
-            },
+        },
+      }),
+      this.prisma.recommendation.count({
+        where: {
+          status: {
+            notIn: [RecommendationStatus.COMPLETED, RecommendationStatus.DISMISSED],
           },
-        }),
-        this.prisma.training.count({
-          where: {
-            startDate: {
-              gte: now,
-            },
-            status: {
-              in: [TrainingStatus.ENROLLED, TrainingStatus.IN_PROGRESS],
-            },
+        },
+      }),
+      this.prisma.training.count({
+        where: {
+          startDate: {
+            gte: now,
           },
-        }),
-        this.aggregateSkillUsage(),
-        this.calculateAveragePerformance(),
-      ]);
+          status: {
+            in: [TrainingStatus.ENROLLED, TrainingStatus.IN_PROGRESS],
+          },
+        },
+      }),
+      this.aggregateSkillUsage(),
+      this.calculateAveragePerformance(),
+    ]);
 
     return {
       employeeCount,
@@ -146,7 +152,9 @@ export class AnalyticsService {
     };
   }
 
-  async getTopPerformers(limit: number = 10): Promise<{ id: string; name: string; averageRating: number }[]> {
+  async getTopPerformers(
+    limit: number = 10,
+  ): Promise<{ id: string; name: string; averageRating: number }[]> {
     const reviews = await this.prisma.performanceReview.findMany({
       where: {
         overallRating: {

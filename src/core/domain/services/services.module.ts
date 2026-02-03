@@ -29,6 +29,11 @@ import { ProjectSkillsService } from './project-skills.service';
 import { SkillProficiencyService } from './skill-proficiency.service';
 import { AdminService } from './admin.service';
 import { AuthService } from './auth.service';
+import { LeaveService } from './leave.service';
+import { AttendanceService } from './attendance.service';
+import { HealthService } from './health.service';
+import { AIService } from '@core/domain/service/ai.service';
+import { ChatbotService } from '@core/domain/service/chatbot.service';
 
 @Module({
   imports: [PrismaModule],
@@ -62,6 +67,11 @@ import { AuthService } from './auth.service';
     SkillProficiencyService,
     AdminService,
     AuthService,
+    LeaveService,
+    AttendanceService,
+    HealthService,
+    AIService,
+    ChatbotService,
   ],
   exports: [
     EmployeeService,
@@ -93,6 +103,11 @@ import { AuthService } from './auth.service';
     SkillProficiencyService,
     AdminService,
     AuthService,
+    LeaveService,
+    AttendanceService,
+    HealthService,
+    AIService,
+    ChatbotService,
   ],
 })
 export class ServicesModule {}

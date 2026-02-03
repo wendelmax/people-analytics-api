@@ -14,7 +14,7 @@ import { PerformanceController } from '@application/api/controllers/performance.
 import { NotificationsController } from '@application/api/controllers/notifications.controller';
 import { AuditLogController } from '@application/api/controllers/audit-log.controller';
 import { AnalyticsController } from '@application/api/controllers/analytics.controller';
-import { PerformanceInsightsController } from '@application/api/controllers/performanceInsights.controller';
+import { PerformanceInsightsController } from '@application/api/controllers/performance-insights.controller';
 import { InsightsController } from '@application/api/controllers/insights.controller';
 import { CareerPathwayController } from '@application/api/controllers/career-pathway.controller';
 import { OnboardingController } from '@application/api/controllers/onboarding.controller';
@@ -22,12 +22,15 @@ import { OffboardingController } from '@application/api/controllers/offboarding.
 import { EmployeeJourneyController } from '@application/api/controllers/employee-journey.controller';
 import { CareerController } from '@application/api/controllers/career.controller';
 import { KnowledgeBaseController } from '@application/api/controllers/knowledge-base.controller';
-import { CompetencyAssessmentController } from '@application/api/controllers/competency-assessment.Controller';
+import { CompetencyAssessmentController } from '@application/api/controllers/competency-assessment.controller';
 import { ServicesModule } from '@core/domain/services/services.module';
 import { ProjectSkillsController } from '@application/api/controllers/project-skills.controller';
 import { SkillProficiencyController } from '@application/api/controllers/skill-proficiency.controller';
 import { AdminController } from '@application/api/controllers/admin.controller';
 import { AuthController } from '@application/api/controllers/auth.controller';
+import { LeaveController } from '@application/api/controllers/leave.controller';
+import { AttendanceController } from '@application/api/controllers/attendance.controller';
+import { EmployeeSelfServiceController } from '@application/api/controllers/employee-self-service.controller';
 
 @Module({
   imports: [ServicesModule],
@@ -60,6 +63,9 @@ import { AuthController } from '@application/api/controllers/auth.controller';
     ProjectSkillsController,
     SkillProficiencyController,
     AdminController,
+    LeaveController,
+    AttendanceController,
+    EmployeeSelfServiceController,
   ],
 })
 export class ApiModule {}

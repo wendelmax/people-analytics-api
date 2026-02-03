@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { RAGPrompts } from '../prompts/ragPrompts';
+import { RAGPrompts } from '@core/common/prompts/ragPrompts';
 import {
   AIContext,
   PerformanceContext,
   CareerContext,
   SkillsContext,
   EngagementContext,
-} from '../type/AIContextTypes';
+} from '@core/common/type/AIContextTypes';
 
 @Injectable()
 export class AIService {

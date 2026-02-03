@@ -1,5 +1,5 @@
 import { InputType, Field, ID } from '@nestjs/graphql';
-import { KnowledgeBaseCategory } from '@prisma/client';
+import { KnowledgeCategory } from '@prisma/client';
 
 @InputType()
 export class CreateKnowledgeBaseInput {
@@ -13,7 +13,7 @@ export class CreateKnowledgeBaseInput {
   content: string;
 
   @Field(() => String)
-  category: KnowledgeBaseCategory;
+  category: KnowledgeCategory;
 
   @Field(() => [ID])
   skillIds: string[];

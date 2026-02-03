@@ -16,8 +16,6 @@ import { NotificationService } from '@core/domain/services/notification.service'
 import {
   CreateNotificationDto,
   UpdateNotificationDto,
-  CreateNotificationPreferenceDto,
-  UpdateNotificationPreferenceDto,
 } from '@application/api/dto/notification.dto';
 
 @ApiTags('notifications')

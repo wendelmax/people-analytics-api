@@ -44,7 +44,9 @@ describe('transform decorators', () => {
 
   it('converts date-like inputs to Date instances', () => {
     const dto = plainToInstance(TransformDto, { occurredAt: '2024-01-01T00:00:00.000Z' });
-    const fromDate = plainToInstance(TransformDto, { occurredAt: new Date('2024-01-02T00:00:00.000Z') });
+    const fromDate = plainToInstance(TransformDto, {
+      occurredAt: new Date('2024-01-02T00:00:00.000Z'),
+    });
     const invalid = plainToInstance(TransformDto, { occurredAt: 'not-a-date' });
 
     expect(dto.occurredAt).toBeInstanceOf(Date);
@@ -53,4 +55,3 @@ describe('transform decorators', () => {
     expect(invalid.occurredAt).toBeUndefined();
   });
 });
-

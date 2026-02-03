@@ -12,7 +12,10 @@ export class ChatbotInteractionDto {
 }
 
 export class ChatbotContextPreferencesDto {
-  @ApiPropertyOptional({ enum: ['basic', 'detailed', 'technical'], description: 'Level of detail for the response' })
+  @ApiPropertyOptional({
+    enum: ['basic', 'detailed', 'technical'],
+    description: 'Level of detail for the response',
+  })
   @IsOptional()
   @IsEnum(['basic', 'detailed', 'technical'])
   detailLevel?: 'basic' | 'detailed' | 'technical';
@@ -23,7 +26,10 @@ export class ChatbotContextDto {
   @IsUUID()
   userId: string;
 
-  @ApiPropertyOptional({ type: ChatbotContextPreferencesDto, description: 'User preferences for the response' })
+  @ApiPropertyOptional({
+    type: ChatbotContextPreferencesDto,
+    description: 'User preferences for the response',
+  })
   @IsOptional()
   @IsObject()
   preferences?: ChatbotContextPreferencesDto;
@@ -80,4 +86,3 @@ export class CreateChatbotDto {
 }
 
 export class UpdateChatbotDto extends PartialType(CreateChatbotDto) {}
-

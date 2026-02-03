@@ -7,7 +7,7 @@ import { UserRole } from '@core/common/enums/UserEnums';
 export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async login(email: string, password: string) {
+  async login(email: string, _password: string) {
     const employee = await this.prisma.employee.findUnique({
       where: { email },
     });
@@ -64,4 +64,3 @@ export class AuthService {
     };
   }
 }
-

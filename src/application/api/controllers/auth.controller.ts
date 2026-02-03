@@ -1,4 +1,11 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from '@core/domain/services/auth.service';
 import { LoginDto } from '@application/api/dto/auth.dto';
@@ -24,4 +31,3 @@ export class AuthController {
     }
   }
 }
-

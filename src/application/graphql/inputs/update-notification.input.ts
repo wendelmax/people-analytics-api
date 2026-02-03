@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { NotificationType } from '@prisma/client';
+import { NotificationChannel } from '@prisma/client';
 
 @InputType()
 export class UpdateNotificationInput {
@@ -10,7 +10,7 @@ export class UpdateNotificationInput {
   message?: string;
 
   @Field(() => String, { nullable: true })
-  type?: NotificationType;
+  type?: NotificationChannel;
 
   @Field({ nullable: true })
   read?: boolean;

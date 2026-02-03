@@ -5,8 +5,8 @@ import { PrismaService } from '@infrastructure/database/prisma.service';
 export class SkillsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async remove(id: number) {
-    await this.prisma.skillsInventory.delete({
+  async remove(id: string) {
+    await this.prisma.skill.delete({
       where: { id },
     });
     return { success: true };

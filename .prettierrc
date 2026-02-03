@@ -6,14 +6,5 @@
   "semi": true,
   "arrowParens": "always",
   "bracketSpacing": true,
-  "endOfLine": "auto",
-  "importOrder": [
-    "^@nestjs/(.*)$",
-    "^@prisma/(.*)$",
-    "^@core/(.*)$",
-    "^@common/(.*)$",
-    "^[./]"
-  ],
-  "importOrderSeparation": true,
-  "importOrderSortSpecifiers": true
+  "endOfLine": "auto"
 }

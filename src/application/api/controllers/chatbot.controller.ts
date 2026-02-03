@@ -1,11 +1,17 @@
 import { Controller, Post, Body, Get, Param, Query, Patch, Delete } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AuthDecorator } from '../auth/decorator/auth.decorator';
 import { UserRole } from '@core/common/enums/UserEnums';
-import { AIService } from '@core/common/services/AIService';
-import { ChatbotService } from '@core/domain/chatbot/service/ChatbotService';
+import { AIService } from '@core/domain/service/ai.service';
+import { ChatbotService } from '@core/domain/service/chatbot.service';
 import {
-  ChatbotInteractionDto,
   ChatbotContextDto,
   ChatbotTrainingDto,
   ChatbotFeedbackDto,
@@ -27,15 +33,10 @@ export class ChatbotController {
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Interact with chatbot' })
   @ApiQuery({ name: 'context', required: false, description: 'Context for the conversation' })
-  async interact(
-    @Body() body: { message: string },
-    @Query('context') context?: string,
-  ) {
-    const interactionDto = { message: body.message };
+  async interact(@Body() body: { message: string; userId?: string }, @Query('context') context?: string) {
+    const interactionDto = { message: body.message, userId: body.userId ?? 'anonymous' };
     const enrichedContext = await this.chatbotService.enrichContext(interactionDto, context);
-    const response = await this.aiService.generateResponse(interactionDto.message, enrichedContext, {
-      detailLevel: 'conversational',
-    });
+    const response = await this.aiService.generateResponse(interactionDto.message, enrichedContext);
     return {
       id: randomUUID(),
       message: body.message,
@@ -49,18 +50,21 @@ export class ChatbotController {
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Analyze performance via chatbot' })
   @ApiQuery({ name: 'employeeId', required: true, description: 'Employee ID' })
-  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Detail level' })
+  @ApiQuery({
+    name: 'detailLevel',
+    required: false,
+    enum: ['basic', 'detailed', 'technical'],
+    description: 'Detail level',
+  })
   async analyzePerformance(
     @Query('employeeId') employeeId: string,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
-    @Body() body: {} = {},
   ) {
-    const contextDto = { employeeId };
+    const contextDto = { userId: employeeId };
     const performanceContext = await this.chatbotService.createPerformanceContext(contextDto);
     const response = await this.aiService.generateResponse(
       'Analise a performance do colaborador',
       performanceContext,
-      { detailLevel },
     );
     return {
       employeeId,
@@ -73,51 +77,70 @@ export class ChatbotController {
   @Post('career-guidance')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Fornece orientação de carreira via chatbot' })
-  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
+  @ApiQuery({
+    name: 'detailLevel',
+    required: false,
+    enum: ['basic', 'detailed', 'technical'],
+    description: 'Nível de detalhe da resposta',
+  })
   async getCareerGuidance(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
   ) {
     const careerContext = await this.chatbotService.createCareerContext(contextDto);
-    return this.aiService.generateResponse('Forneça orientação de carreira', careerContext, {
-      detailLevel,
-    });
+    return this.aiService.generateResponse('Forneça orientação de carreira', careerContext);
   }
 
   @Post('skills-assessment')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Avalia habilidades via chatbot' })
-  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
+  @ApiQuery({
+    name: 'detailLevel',
+    required: false,
+    enum: ['basic', 'detailed', 'technical'],
+    description: 'Nível de detalhe da resposta',
+  })
   async assessSkills(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
   ) {
     const skillsContext = await this.chatbotService.createSkillsContext(contextDto);
-    return this.aiService.generateResponse('Avalie as habilidades do colaborador', skillsContext, {
-      detailLevel,
-    });
+    return this.aiService.generateResponse('Avalie as habilidades do colaborador', skillsContext);
   }
 
   @Post('engagement-feedback')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Obtém feedback de engajamento via chatbot' })
-  @ApiQuery({ name: 'detailLevel', required: false, enum: ['basic', 'detailed', 'technical'], description: 'Nível de detalhe da resposta' })
+  @ApiQuery({
+    name: 'detailLevel',
+    required: false,
+    enum: ['basic', 'detailed', 'technical'],
+    description: 'Nível de detalhe da resposta',
+  })
   async getEngagementFeedback(
     @Body() contextDto: ChatbotContextDto,
     @Query('detailLevel') detailLevel?: 'basic' | 'detailed' | 'technical',
   ) {
     const engagementContext = await this.chatbotService.createEngagementContext(contextDto);
-    return this.aiService.generateResponse('Analise o engajamento', engagementContext, {
-      detailLevel,
-    });
+    return this.aiService.generateResponse('Analise o engajamento', engagementContext);
   }
 
   @Get('conversation-history/:userId')
   @AuthDecorator(UserRole.EMPLOYEE, UserRole.MANAGER, UserRole.HR_MANAGER)
   @ApiOperation({ summary: 'Obtém histórico de conversas do usuário' })
   @ApiParam({ name: 'userId', description: 'ID do usuário' })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Número máximo de resultados' })
-  @ApiQuery({ name: 'offset', required: false, type: Number, description: 'Número de resultados para pular' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número máximo de resultados',
+  })
+  @ApiQuery({
+    name: 'offset',
+    required: false,
+    type: Number,
+    description: 'Número de resultados para pular',
+  })
   async getConversationHistory(
     @Param('userId') userId: string,
     @Query('limit') limit?: number,

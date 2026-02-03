@@ -1,5 +1,5 @@
 import { InputType, Field, ID, Int } from '@nestjs/graphql';
-import { RecommendationType, RecommendationPriority, RecommendationStatus } from '@prisma/client';
+import { RecommendationSource, RecommendationPriority, RecommendationStatus } from '@prisma/client';
 
 @InputType()
 export class CreateRecommendationInput {
@@ -13,7 +13,7 @@ export class CreateRecommendationInput {
   description: string;
 
   @Field(() => String)
-  type: RecommendationType;
+  type: RecommendationSource;
 
   @Field(() => Int)
   priority: RecommendationPriority;

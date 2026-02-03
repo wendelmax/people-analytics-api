@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum SkillType {
@@ -214,6 +214,8 @@ model Department {
   employees   Employee[]
   journeys    EmployeeJourney[]
   knowledgeArticles KnowledgeArticle[]
+  leavePolicies LeavePolicy[]
+  workSchedules WorkSchedule[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
@@ -228,6 +230,8 @@ model Position {
   employees    Employee[]
   careerPaths  CareerPathPosition[]
   journeys     EmployeeJourney[]
+  leavePolicies LeavePolicy[]
+  workSchedules WorkSchedule[]
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -291,6 +295,11 @@ model Employee {
   competencyReviews   CompetencyAssessment[] @relation("AssessmentReviewer")
   skillProgress       SkillProgressEntry[]
   adminProfile        Admin?
+  leaveRequests       LeaveRequest[]           @relation("LeaveEmployee")
+  leaveApprovals      LeaveRequest[]           @relation("LeaveApprover")
+  leaveBalances       LeaveBalance[]
+  attendances         Attendance[]
+  workSchedule        WorkSchedule?
   createdAt          DateTime                 @default(now())
   updatedAt          DateTime                 @updatedAt
   Project            Project[]
@@ -788,4 +797,140 @@ model Admin {
   updatedAt  DateTime  @updatedAt
 
   employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum LeaveTypeEnum {
+  VACATION
+  SICK_LEAVE
+  PERSONAL
+  MATERNITY
+  PATERNITY
+  UNPAID
+  OTHER
+}
+
+model LeaveType {
+  id              String        @id @default(uuid())
+  name            String
+  code            String        @unique
+  maxDays         Int?
+  carryForward    Boolean       @default(false)
+  requiresApproval Boolean      @default(true)
+  isActive        Boolean       @default(true)
+  leaveRequests   LeaveRequest[]
+  leaveBalances   LeaveBalance[]
+  leavePolicies   LeavePolicy[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model LeavePolicy {
+  id          String     @id @default(uuid())
+  leaveTypeId String
+  departmentId String?
+  positionId  String?
+  maxDays     Int?
+  minDays     Int?
+  accrualRate Float?
+  leaveType   LeaveType  @relation(fields: [leaveTypeId], references: [id])
+  department  Department? @relation(fields: [departmentId], references: [id])
+  position    Position?   @relation(fields: [positionId], references: [id])
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model LeaveRequest {
+  id             String      @id @default(uuid())
+  employeeId     String
+  leaveTypeId    String
+  startDate      DateTime
+  endDate        DateTime
+  days           Float
+  reason         String?
+  status         LeaveStatus @default(PENDING)
+  approverId     String?
+  approvedAt     DateTime?
+  rejectedReason String?
+  employee       Employee    @relation("LeaveEmployee", fields: [employeeId], references: [id])
+  leaveType      LeaveType   @relation(fields: [leaveTypeId], references: [id])
+  approver       Employee?   @relation("LeaveApprover", fields: [approverId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([startDate, endDate])
+}
+
+model LeaveBalance {
+  id          String   @id @default(uuid())
+  employeeId String
+  leaveTypeId String
+  balance     Float    @default(0)
+  accrued     Float    @default(0)
+  used        Float    @default(0)
+  year        Int
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  leaveType   LeaveType @relation(fields: [leaveTypeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([employeeId])
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  HALF_DAY
+  ON_LEAVE
+  HOLIDAY
+}
+
+model Attendance {
+  id          String           @id @default(uuid())
+  employeeId String
+  date        DateTime
+  checkIn     DateTime?
+  checkOut    DateTime?
+  workHours   Float?
+  status      AttendanceStatus @default(PRESENT)
+  location    Json?
+  notes       String?
+  lateMinutes Int?
+  overtimeHours Float?
+  employee    Employee         @relation(fields: [employeeId], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@index([date])
+  @@index([status])
+}
+
+model WorkSchedule {
+  id            String    @id @default(uuid())
+  employeeId    String?   @unique
+  departmentId  String?
+  positionId    String?
+  name          String
+  startTime     String
+  endTime       String
+  breakDuration Int?
+  workDays      Int[]
+  isDefault     Boolean  @default(false)
+  employee      Employee?  @relation(fields: [employeeId], references: [id])
+  department    Department? @relation(fields: [departmentId], references: [id])
+  position      Position?   @relation(fields: [positionId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }

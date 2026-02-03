@@ -14,20 +14,24 @@ import {
   SkillsContext,
   EngagementContext,
 } from '@core/common/type/AIContextTypes';
-import { PrismaService } from '@database/prisma/prisma.service';
+import { PrismaService } from '@infrastructure/database/prisma.service';
 
 @Injectable()
 export class ChatbotService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private get db(): PrismaService & { user?: { findUnique: (args: unknown) => Promise<unknown> }; chatbotInteraction?: { findMany: (args: unknown) => Promise<unknown[]>; findUnique: (args: unknown) => Promise<unknown>; create: (args: unknown) => Promise<unknown>; update: (args: unknown) => Promise<unknown>; delete: (args: unknown) => Promise<unknown> } } {
+    return this.prisma as typeof this.prisma & { user?: { findUnique: (args: unknown) => Promise<unknown> }; chatbotInteraction?: { findMany: (args: unknown) => Promise<unknown[]>; findUnique: (args: unknown) => Promise<unknown>; create: (args: unknown) => Promise<unknown>; update: (args: unknown) => Promise<unknown>; delete: (args: unknown) => Promise<unknown> } };
+  }
+
   async enrichContext(interactionDto: ChatbotInteractionDto, context?: string): Promise<AIContext> {
-    const user = await this.prisma.user.findUnique({
+    const user = (await this.db.user!.findUnique({
       where: { id: interactionDto.userId },
       include: {
         department: true,
         position: true,
       },
-    });
+    })) as { id: string; role?: string; department: { name: string }; position: { title: string }; startDate: Date };
 
     return {
       user: {
@@ -35,7 +39,7 @@ export class ChatbotService {
         role: user.role,
         department: user.department.name,
         position: user.position.title,
-        experience: this.calculateExperience(user.startDate),
+        experience: String(this.calculateExperience(user.startDate)),
       },
       conversation: {
         history: await this.getRecentConversationHistory(),
@@ -58,7 +62,7 @@ export class ChatbotService {
   }
 
   async createPerformanceContext(contextDto: ChatbotContextDto): Promise<PerformanceContext> {
-    const user = await this.prisma.user.findUnique({
+    const user = (await this.db.user!.findUnique({
       where: { id: contextDto.userId },
       include: {
         performance: {
@@ -69,7 +73,7 @@ export class ChatbotService {
           },
         },
       },
-    });
+    })) as { id: string; role?: string; department: { name: string }; position: { title: string }; startDate: Date; performance: { metrics: unknown; feedback: unknown; goals: unknown } };
 
     return {
       user: {
@@ -77,7 +81,7 @@ export class ChatbotService {
         role: user.role,
         department: user.department.name,
         position: user.position.title,
-        experience: this.calculateExperience(user.startDate),
+        experience: String(this.calculateExperience(user.startDate)),
       },
       conversation: {
         history: await this.getRecentConversationHistory(),
@@ -107,7 +111,7 @@ export class ChatbotService {
   }
 
   async createCareerContext(contextDto: ChatbotContextDto): Promise<CareerContext> {
-    const user = await this.prisma.user.findUnique({
+    const user = (await this.db.user!.findUnique({
       where: { id: contextDto.userId },
       include: {
         career: {
@@ -118,7 +122,7 @@ export class ChatbotService {
           },
         },
       },
-    });
+    })) as { id: string; role?: string; department: { name: string }; position: { title: string; level?: string }; startDate: Date; career: { history: unknown; aspirations: unknown; skills: unknown } };
 
     return {
       user: {
@@ -126,7 +130,7 @@ export class ChatbotService {
         role: user.role,
         department: user.department.name,
         position: user.position.title,
-        experience: this.calculateExperience(user.startDate),
+        experience: String(this.calculateExperience(user.startDate)),
       },
       conversation: {
         history: await this.getRecentConversationHistory(),
@@ -158,7 +162,7 @@ export class ChatbotService {
   }
 
   async createSkillsContext(contextDto: ChatbotContextDto): Promise<SkillsContext> {
-    const user = await this.prisma.user.findUnique({
+    const user = (await this.db.user!.findUnique({
       where: { id: contextDto.userId },
       include: {
         skills: {
@@ -169,7 +173,7 @@ export class ChatbotService {
           },
         },
       },
-    });
+    })) as { id: string; role?: string; department: { name: string }; position: { title: string }; startDate: Date; skills: { technical: unknown; soft: unknown; certifications: unknown } };
 
     return {
       user: {
@@ -177,7 +181,7 @@ export class ChatbotService {
         role: user.role,
         department: user.department.name,
         position: user.position.title,
-        experience: this.calculateExperience(user.startDate),
+        experience: String(this.calculateExperience(user.startDate)),
       },
       conversation: {
         history: await this.getRecentConversationHistory(),
@@ -205,7 +209,7 @@ export class ChatbotService {
   }
 
   async createEngagementContext(contextDto: ChatbotContextDto): Promise<EngagementContext> {
-    const user = await this.prisma.user.findUnique({
+    const user = (await this.db.user!.findUnique({
       where: { id: contextDto.userId },
       include: {
         team: {
@@ -220,7 +224,7 @@ export class ChatbotService {
           },
         },
       },
-    });
+    })) as { id: string; role?: string; department: { name: string }; position: { title: string }; startDate: Date; team: { engagement: { surveys: unknown; feedback: unknown; activities: unknown } } };
 
     return {
       user: {
@@ -228,7 +232,7 @@ export class ChatbotService {
         role: user.role,
         department: user.department.name,
         position: user.position.title,
-        experience: this.calculateExperience(user.startDate),
+        experience: String(this.calculateExperience(user.startDate)),
       },
       conversation: {
         history: await this.getRecentConversationHistory(),
@@ -255,7 +259,7 @@ export class ChatbotService {
   }
 
   async getConversationHistory(userId: string, options?: { limit?: number; offset?: number }) {
-    return this.prisma.chatbotInteraction.findMany({
+    return this.db.chatbotInteraction!.findMany({
       where: { userId },
       orderBy: { timestamp: 'desc' },
       take: options?.limit || 10,
@@ -263,24 +267,24 @@ export class ChatbotService {
     });
   }
 
-  async trainWithNewData(trainingDto: ChatbotTrainingDto) {
+  async trainWithNewData(_trainingDto: ChatbotTrainingDto) {
     return { success: true };
   }
 
-  async processFeedback(feedbackDto: ChatbotFeedbackDto) {
+  async processFeedback(_feedbackDto: ChatbotFeedbackDto) {
     return { success: true };
   }
 
-  async generateSuggestions(userId: string, context?: string) {
+  async generateSuggestions(_userId: string, _context?: string) {
     return [];
   }
 
-  async updateConversationContext(contextDto: ChatbotContextDto) {
+  async updateConversationContext(_contextDto: ChatbotContextDto) {
     return { success: true };
   }
 
   async create(createChatbotDto: CreateChatbotDto) {
-    return this.prisma.chatbotInteraction.create({
+    return this.db.chatbotInteraction!.create({
       data: {
         userId: createChatbotDto.userId,
         message: createChatbotDto.message,
@@ -291,26 +295,26 @@ export class ChatbotService {
   }
 
   async findAll() {
-    return this.prisma.chatbotInteraction.findMany({
+    return this.db.chatbotInteraction!.findMany({
       orderBy: { timestamp: 'desc' },
     });
   }
 
   async findOne(id: string) {
-    return this.prisma.chatbotInteraction.findUnique({
+    return this.db.chatbotInteraction!.findUnique({
       where: { id },
     });
   }
 
   async update(id: string, updateChatbotDto: UpdateChatbotDto) {
-    return this.prisma.chatbotInteraction.update({
+    return this.db.chatbotInteraction!.update({
       where: { id },
       data: updateChatbotDto,
     });
   }
 
   async remove(id: string) {
-    return this.prisma.chatbotInteraction.delete({
+    return this.db.chatbotInteraction!.delete({
       where: { id },
     });
   }

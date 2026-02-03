@@ -85,6 +85,7 @@ export class PerformanceInsightsService {
       include: {
         employee: {
           select: {
+            id: true,
             departmentId: true,
             department: {
               select: {
@@ -97,24 +98,30 @@ export class PerformanceInsightsService {
       },
     });
 
-    const grouped = new Map<string, AggregatedValues>();
+    const grouped = new Map<string, AggregatedValues & { employeeIds: Set<string> }>();
 
     for (const review of reviews) {
       const department = review.employee.department;
       if (!department) {
         continue;
       }
-      const bucket = grouped.get(department.id) ?? {
-        entityId: department.id,
-        entityName: department.name,
-        total: 0,
-        count: 0,
-      };
+      const existing = grouped.get(department.id);
+      if (!existing) {
+        grouped.set(department.id, {
+          entityId: department.id,
+          entityName: department.name,
+          total: 0,
+          count: 0,
+          employeeIds: new Set([review.employee.id]),
+        });
+      } else {
+        existing.employeeIds.add(review.employee.id);
+      }
+      const bucket = grouped.get(department.id)!;
       if (review.overallRating !== null && review.overallRating !== undefined) {
         bucket.total += review.overallRating;
         bucket.count += 1;
       }
-      grouped.set(department.id, bucket);
     }
 
     return Array.from(grouped.values()).map((bucket) => ({
@@ -122,6 +129,7 @@ export class PerformanceInsightsService {
       departmentName: bucket.entityName,
       averageRating: bucket.count > 0 ? bucket.total / bucket.count : null,
       reviews: bucket.count,
+      employeeCount: bucket.employeeIds.size,
     }));
   }
 
@@ -310,6 +318,7 @@ export type DepartmentInsight = {
   departmentName: string;
   averageRating: number | null;
   reviews: number;
+  employeeCount: number;
 };
 
 export type PositionInsight = {
