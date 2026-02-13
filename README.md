@@ -1,113 +1,47 @@
-# People Analytics API
+# People Analytics API (.NET 10)
 
-API para análise de dados de pessoas e recursos humanos, fornecendo insights sobre performance, desenvolvimento e engajamento dos colaboradores.
+Backend da API People Analytics em ASP.NET Core 10. Usa o mesmo banco PostgreSQL do backend Node (Prisma); as tabelas e colunas seguem o schema existente.
 
-## Tecnologias Utilizadas
+## Cobertura para o frontend
 
-- NestJS
-- Prisma
-- PostgreSQL
-- GraphQL
-- Swagger/OpenAPI
-- TypeScript
+Implementado e compativel com o frontend (mesmos paths e formato de resposta):
 
-## Pré-requisitos
+| Recurso | Endpoints | Observacao |
+|---------|-----------|------------|
+| Health | GET /api/health | |
+| Auth | POST /api/auth/login | Retorna accessToken, token, user (id, email, name, role) |
+| Departments | GET, GET/:id, POST, PATCH, DELETE /api/departments | |
+| Projects | GET, GET/:id, POST, PATCH, DELETE /api/projects | |
+| Notifications | GET, GET/:id, POST, PATCH, DELETE, PATCH/:id/read, GET user/:userId/unread | |
+| Employee | GET, GET/:id, POST, PATCH, DELETE /api/employee | |
 
-- Node.js (v18 ou superior)
-- PostgreSQL
-- npm ou yarn
+O frontend usa ainda outros modulos que nesta API .NET nao existem (retornarao 404 se chamados sem mock): positions, skills, skill-proficiency, analytics, insights, chatbot, settings/ai-provider, leaves, attendance, benefits, payroll, recruitment, etc. Para usar essas telas com a API .NET, mantenha `VITE_USE_MOCK=true` para os mocks ou implemente os endpoints faltantes.
 
-## Instalação
+## Endpoints (resumo)
 
-1. Clone o repositório:
-```bash
-git clone [URL_DO_REPOSITÓRIO]
-```
+- `GET /api/health` - Health check
+- `POST /api/auth/login` - Login (email, password) retorna accessToken e user
+- `GET|POST|PATCH|DELETE /api/departments` e `GET /api/departments/:id`
+- `GET|POST|PATCH|DELETE /api/projects` e `GET /api/projects/:id`
+- `GET|POST|PATCH|DELETE /api/notifications`, `GET /api/notifications/user/:userId/unread`, `PATCH /api/notifications/:id/read`
+- `GET|POST|PATCH|DELETE /api/employee` e `GET /api/employee/:id`
 
-2. Instale as dependências:
-```bash
-npm install
-```
+## Executar local
 
-3. Configure as variáveis de ambiente:
-```bash
-cp .env.example .env
-```
-Edite o arquivo `.env` com suas configurações.
-
-4. Execute as migrações do banco de dados:
-```bash
-npx prisma migrate dev
-```
-
-## Executando a Aplicação
-
-### Desenvolvimento
-```bash
-npm run start:dev
-```
-
-### Produção
-```bash
-npm run build
-npm run start:prod
-```
-
-## Documentação da API
-
-### Swagger UI
-A documentação interativa da API REST está disponível em:
-```
-http://localhost:3000/api
-```
-
-### GraphQL Playground
-O playground do GraphQL está disponível em:
-```
-http://localhost:3000/graphql
-```
-
-## Estrutura do Projeto
-
-```
-src/
-├── application/          # Camada de aplicação (controllers, resolvers, DTOs)
-├── core/                 # Camada de domínio (entities, services)
-├── infrastructure/       # Camada de infraestrutura (database, external services)
-└── main.ts              # Ponto de entrada da aplicação
-```
-
-## Testes
+Requer .NET 10 SDK e PostgreSQL (ou use o compose apenas do postgres).
 
 ```bash
-# Testes unitários
-npm run test
-
-# Testes e2e
-npm run test:e2e
-
-# Cobertura de testes
-npm run test:cov
+dotnet run
 ```
 
-## Linting e Formatação
+Variaveis de ambiente opcionais: `ConnectionStrings__DefaultConnection`, `JWT_SECRET`, `PORT` (default 3000).
+
+## Executar com Docker
+
+Na raiz do monorepo (pasta people-analytics):
 
 ```bash
-# Linting
-npm run lint
-
-# Formatação
-npm run format
+podman compose up -d
 ```
 
-## Contribuição
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-feature`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
-4. Faça push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
-
-## Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+O servico `api` sobe na porta 3000. O frontend (`web`) aponta para `http://localhost:3000/api`.

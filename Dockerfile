@@ -1,20 +1,15 @@
-FROM node:18-alpine
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
 
-# Instalar OpenSSL
-RUN apk add --no-cache openssl
+COPY PeopleAnalytics.Api.csproj ./
+RUN dotnet restore
 
+COPY . ./
+RUN dotnet publish -c Release -o /app
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
-
-COPY package*.json ./
-
-RUN npm install
-
-COPY . .
-
-RUN npx prisma generate
-
-RUN npm run build
-
+COPY --from=build /app .
+ENV ASPNETCORE_URLS=http://0.0.0.0:3000
 EXPOSE 3000
-
-CMD ["npm", "run", "start:prod"] 
+ENTRYPOINT ["dotnet", "PeopleAnalytics.Api.dll"]
